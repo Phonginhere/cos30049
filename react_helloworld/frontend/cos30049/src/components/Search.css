@@ -1,0 +1,61 @@
+/* src/components/Search.css */
+
+@media (max-width: 768px) {
+  .search-group {
+    flex-direction: column;
+  }
+}
+
+.search-section {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  margin-bottom: 20px;
+}
+
+.search-group {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.search-group input,
+.search-group select {
+  padding: 8px;
+  font-size: 1rem;
+  flex: 1;
+  min-width: 150px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  background-color: white;
+}
+
+.search-group select {
+  appearance: none; /* Removes default arrow in some browsers */
+  background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 4 5'%3E%3Cpath fill='%23777' d='M2 0L0 2h4L2 0z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  background-size: 8px 10px;
+  padding-right: 30px; /* Space for the custom arrow */
+}
+
+.search-group select:focus {
+  outline: none;
+  border-color: #007bff;
+  box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+}
+
+.reset-button {
+  align-self: flex-start;
+  padding: 8px 16px;
+  font-size: 1rem;
+  background-color: #dc3545; /* Bootstrap danger color */
+  color: white;
+  border: none;
+  cursor: pointer;
+  border-radius: 4px;
+}
+
+.reset-button:hover {
+  background-color: #c82333;
+}

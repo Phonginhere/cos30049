@@ -1,0 +1,130 @@
+/* src/components/Body.css */
+
+.body-container {
+  flex: 1;
+  padding: 20px;
+  overflow-y: auto;
+  background-color: #f9f9f9;
+}
+
+.search-section {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  margin-bottom: 20px;
+}
+
+.search-group {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.search-group input,
+.search-group select {
+  padding: 8px;
+  font-size: 1rem;
+  flex: 1;
+  min-width: 150px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  background-color: white;
+}
+
+.search-group select {
+  appearance: none; /* Removes default arrow in some browsers */
+  background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 4 5'%3E%3Cpath fill='%23777' d='M2 0L0 2h4L2 0z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  background-size: 8px 10px;
+  padding-right: 30px; /* Space for the custom arrow */
+}
+
+.search-group select:focus {
+  outline: none;
+  border-color: #007bff;
+  box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+}
+
+.reset-button {
+  align-self: flex-start;
+  padding: 8px 16px;
+  font-size: 1rem;
+  background-color: #dc3545; /* Bootstrap danger color */
+  color: white;
+  border: none;
+  cursor: pointer;
+  border-radius: 4px;
+}
+
+.reset-button:hover {
+  background-color: #c82333;
+}
+
+.rows-per-page {
+  display: flex;
+  align-items: center;
+  margin-bottom: 10px;
+  gap: 10px;
+}
+
+.rows-per-page label {
+  font-weight: bold;
+}
+
+.rows-per-page select {
+  padding: 6px;
+  font-size: 1rem;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  background-color: white;
+}
+
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  background-color: white;
+}
+
+.data-table th,
+.data-table td {
+  border: 1px solid #ddd;
+  padding: 8px;
+  text-align: left;
+}
+
+.data-table th {
+  background-color: #f2f2f2;
+  cursor: pointer; /* Indicates that headers are clickable for sorting */
+}
+
+.data-table th.sortable:hover {
+  background-color: #e9ecef;
+}
+
+.data-table tr:nth-child(even) {
+  background-color: #f9f9f9;
+}
+
+.ellipsis {
+  padding: 8px 12px;
+  margin: 2px;
+  color: #6c757d;
+  font-weight: bold;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .search-group {
+    flex-direction: column;
+  }
+
+  .rows-per-page {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .rows-per-page select {
+    width: 100%;
+  }
+}
