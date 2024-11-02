@@ -6,8 +6,10 @@ npx create-react-app front-end
 cd front-end
 npm start
 
-# Install axios
+# Installation
 npm install axios
+npm install bootstrap
+
 
 # Run the prediction model
 cd front-end
