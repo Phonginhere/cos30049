@@ -10,16 +10,10 @@ import Choropleth from './choropleth/Choropleth';
 const DrawAllCharts = () => {
 
     useEffect(() => {
-        // Run the initial charts on component mount
-        // Choropleth();
-        // scatter_plot();
         try {
             // Initialization or chart rendering logic here
             console.log("DrawAllCharts Mounted");
-            // window.onload = function() {
-            //     choropleth(); 
-            // }
-            // <Choropleth/>
+
         } catch (error) {
             console.error("Error in DrawAllCharts:", error);
         }

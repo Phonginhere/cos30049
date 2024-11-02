@@ -1,18 +1,18 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import * as d3 from 'd3';
 import WindowDimensions from '../../hook/Dimensions';
 import all_countries_data_processed from '../../ProcessedData/all_countries_data_processed.csv'
 import world from './world.json'
+import MouseHandler from '../../mouse_move/MouseHandler';
+
+
 // import '../charts/chart_styles.css'; // Import your existing styles if any
 
 const Choropleth = () => {
-
-
     const containerRef = useRef();
-    // const container = d3.select(containerRef).selectAll("svg").remove(); // Clear existing SVG before appending
- 
+    const {mouse_x, mouse_y} = MouseHandler();
     const json = world;   
-
+    const [tooltip, setTooltip] = useState({ visible: false, x: 0, y: 0, content: '' });
     var cfg = {
         w: window.innerWidth*0.43,
         h: (window.innerWidth*0.43)*0.7,
@@ -22,7 +22,10 @@ const Choropleth = () => {
         fontSize: window.innerWidth*0.43/700
     };
 
+
+    
     useEffect(() => {
+        // d3.select(containerRef).select("choropleth-container").remove(); // Clear existing SVG before appending
         // Create or update the chart using D3.js
         function drawChoropleth(initial_data){
             const color = d3.scaleQuantize()
@@ -107,7 +110,7 @@ const Choropleth = () => {
                 return d3.csv(all_countries_data_processed).then(function(data) {
    
                     var data_in_year = data.filter(function(d) {
-                        return d.Year == year;
+                        return d.Year === year;
                     });
                     //Set a range color for each patial
                     color.domain([
@@ -139,10 +142,19 @@ const Choropleth = () => {
                         function handleMouseOver(event, d) {
                             tooltip = d3.select("#choropleth")
                             .append("div")
-                            .attr("class", "chart-tooltip");
+                            .attr("class", "chart-tooltip")
+                            // font-family: 'Roboto', sans-serif; /* Apply Roboto only to tooltip */
+                            .style("font-family","serif ")
+                            .style("position", "absolute")
+                            .style("background-color", "rgba(0, 0, 0, 0.75)")
+                            .style("color", "white")
+                            .style("padding", "6px 8px")
+                            .style("border-radius", "4px")
+                            .style("pointer-events", "none")
+                            .style("opacity", 0);  // Start hidden for smooth fade-in
                             // .style("opacity", 0);
                             var tooltipContent = `
-                            <div><strong>Country:</strong> ${d.properties.name}</div>
+                            <div><strong>Country:</strong> ${d.properties.name}</div>\n
                             <div><strong>PM25:</strong> ${d.properties.value} µg/m3</div><br>
                             Click to see PM25 details for ${d.properties.name}.<br>
                             (Distribution and Bar Chart)`;
@@ -160,10 +172,43 @@ const Choropleth = () => {
                                 .duration(200)
                                 .style("opacity", .9);
                             tooltip.html(tooltipContent)
-                                .style("left", (event.pageX ) + "px")
-                                .style("top", (`${event.pageY- cfg.h2*1.9}px`));
+                                .style("left", `${event.clientX + 10}px`)  // Position tooltip near cursor
+                                .style("top", `${event.clientY + 10}px`)
+                                .transition()
+                                .duration(200)
+                                .style("opacity", 0.9);  // Fade in
+                            setTooltip({
+                                visible: true,
+                                x: event.clientX + 10,
+                                y: event.clientY + 10,
+                            });
                         };
 
+                        function handlerMouseOut(event,d){
+                
+                            d3.selectAll(".Country")
+                                .transition()
+                                .duration(200)
+                                .style("opacity", 0.8);
+                            d3.select(this)
+                                .transition()
+                                .duration(200)
+                                .style("stroke", "transparent");
+                            tooltip.transition()
+                                .duration(cfg.h)
+                                .style("opacity", 10);
+                            d3.selectAll(".chart-tooltip").remove();
+                            setTooltip({ visible: false, x: 0, y: 0, content: '' });
+                        }
+
+                        function handlerMouseMove(event){
+                            setTooltip(tooltip => ({
+                                ...tooltip,
+                                x: event.clientX + 10,
+                                y: event.clientY + 10
+                            }));
+                        }
+                        
                         //Draw the geometry and set its color properties coresponding to the data
                         svg.selectAll("path")
                             .data(json.features)
@@ -178,27 +223,16 @@ const Choropleth = () => {
                                     return "#999";
                                 }
                             })
-                
+                            
                             .on("mouseover", handleMouseOver)
-                            .on("mouseleave", function(event,d) {
-                                d3.selectAll(".Country")
-                                    .transition()
-                                    .duration(200)
-                                    .style("opacity", 0.8);
-                                d3.select(this)
-                                    .transition()
-                                    .duration(200)
-                                    .style("stroke", "transparent");
-                                tooltip.transition()
-                                    .duration(cfg.h)
-                                    .style("opacity", 10);
-                                d3.selectAll(".chart-tooltip").remove();
-                                // d3.selectAll('.radar_chart').remove();
-                            })
+                            .on("mousemove", handlerMouseMove)
+                            .on("mouseleave", handlerMouseOut)
+
                             .on('click', function(event, d) {
                                 let year = slider.value;
                                 let code = d.id;
                                 let country = d.properties.name    
+                                console.log(`Send Data: ${year}, ${code}, ${country}`);
                                 // sendCountryData(year, code, country); 
                             });
                             ;
@@ -207,6 +241,7 @@ const Choropleth = () => {
                         //Title
                         container.append("text")
                         .attr("id","title")
+                        .style("font-family", "serif ")
                         .attr("x", cfg.w / 2)
                         .attr("y", cfg.padding / 2)
                         .style("opacity", 1)
@@ -249,14 +284,8 @@ const Choropleth = () => {
 
         }
 
-        // d3.csv("../../ProcessedData/all_countries_data_processed.csv").then(data => {
-        // d3.csv("../ProcessedData/all_countries_data_processed.csv").then(data => {
-        //     console.log(data)
-        //     // Process data and draw chart
-        //     drawChoropleth(data);
-        // });
-        // d3.csv(all_countries_data_processed, function(data) { console.log(data); });
-        
+
+
         d3.csv(all_countries_data_processed).then(data => {
             console.log("Data loaded:", data);
             drawChoropleth(data);
@@ -268,11 +297,20 @@ const Choropleth = () => {
 
     return (
     <div id = 'choropleth' ref={containerRef}>
-        
+        <div
+            className="tooltip-html"
+            style={{
+                position: 'absolute',
+                top: tooltip.y,
+                left: tooltip.x,
+                whiteSpace: 'nowrap'
+            }}
+        >
+            {tooltip.content}
+        </div>
     </div>
+    );
 
-    
-            );
 };
 
 export default Choropleth;
