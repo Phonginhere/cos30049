@@ -1,17 +1,26 @@
-import React, { useEffect, useRef } from 'react';
-import * as d3 from 'd3';
+import { useState, useEffect } from 'react';
 
-// import '../charts/chart_styles.css'; // Import your existing styles if any
-
-const Dimensions = () => {
+const WindowDimensions = () => {
+    const [windowDimensions, setWindowDimensions] = useState({
+        width: window.innerWidth,
+        height: window.innerHeight
+    });
 
     useEffect(() => {
-        // Create or update the chart using D3.js
+        const handleResize = () => {
+            setWindowDimensions({
+                width: window.innerWidth,
+                height: window.innerHeight,
+                padding: window.innerWidth/13,
+                fontSize: window.innerWidth*0.43/700
+            });
+        };
 
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
 
-    }, []); // Only run once on component mount
-
-    return <svg ref={svgRef} width={600} height={400}></svg>;
+    return windowDimensions;
 };
 
-export default Dimensions;
+export default WindowDimensions;

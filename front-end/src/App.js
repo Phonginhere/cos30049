@@ -1,7 +1,10 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 import BmiChart from './components/BmiChart';
+import Slider from './components/hook/Slider/Slider';
 // import BarChart from './components/charts/BarChart';
+import DrawAllCharts from './components/charts/charts';
+import Choropleth from './components/charts/choropleth/Choropleth';
 
 function App() {
     const [height, setHeight] = useState('');
@@ -60,6 +63,14 @@ function App() {
                 <h2>BMI Data Visualization</h2>
                 <BmiChart data={bmiData} />
             </div>
+            <div>
+                <DrawAllCharts/>
+            </div>
+
+            <div>
+                <Slider/>
+            </div>
+
         </div>
     );
 }

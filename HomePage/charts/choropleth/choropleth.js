@@ -233,7 +233,7 @@ function choropleth(){
             })
 
         })
-    }
+    } // End of draw_choropleth()
 }
 
 function sendCountryData(year, code, country) {

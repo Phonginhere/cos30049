@@ -4,7 +4,32 @@ import * as d3 from 'd3';
 
 const BarChart = () => {
     const svgRef = useRef();
+    // IBM Design Library Colors
+    const ibmColors = [
+        "#3ddbd9", // Teal 50
+        "#6929c4", // Purple 60
+        "#1192e8", // Cyan 60
+        "#005d5d", // Teal 80
+        "#fa4d56", // Red 50
+        "#9f1853", // Magenta 70
+        "#198038", // Green 70
+        "#002d9c"  // Blue 80
+    ];
 
+    // Define color scale using IBM colors
+    const colorScale = d3.scaleOrdinal()
+        .range(ibmColors);
+
+    const causeLabels = [
+        'Asthma',
+        'Ischemic heart disease',
+        'Chronic obstructive pulmonary disease',
+        'Tracheal, bronchus, and lung cancer',
+        'Ischemic stroke',
+        'Upper respiratory infections',
+        'Lower respiratory infections',
+        'Cataract'
+    ]
     useEffect(() => {
         // Create or update the chart using D3.js
         function drawBarChart() {
