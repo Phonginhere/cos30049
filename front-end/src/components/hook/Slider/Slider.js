@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import './SliderStyles.css';
 
-const Slider = ({ min = 0, max = 2021, initialValue = 9999, onChange }) => {
+const Slider = ({ min = 1990, max = 2021, initialValue = 2020, onChange }) => {
     const [value, setValue] = useState(initialValue);
 
     const handleSliderChange = (event) => {
