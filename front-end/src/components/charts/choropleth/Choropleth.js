@@ -233,7 +233,11 @@ const Choropleth = () => {
                                 let code = d.id;
                                 let country = d.properties.name    
                                 console.log(`Send Data: ${year}, ${code}, ${country}`);
-                                // sendCountryData(year, code, country); 
+                                sendCountryData(year, code, country); 
+                                if (typeof module !== 'undefined' && typeof module.exports !== 'undefined') {
+                                    module.exports = year;
+                                    module.exports = slider;
+                                }
                             });
                             ;
                             
@@ -284,7 +288,11 @@ const Choropleth = () => {
 
         }
 
+        function sendCountryData(year, code, country) {
 
+            document.dispatchEvent(new CustomEvent('countryClick', { detail: { year, code, country } }));
+        }
+        
 
         d3.csv(all_countries_data_processed).then(data => {
             console.log("Data loaded:", data);
@@ -297,17 +305,7 @@ const Choropleth = () => {
 
     return (
     <div id = 'choropleth' ref={containerRef}>
-        <div
-            className="tooltip-html"
-            style={{
-                position: 'absolute',
-                top: tooltip.y,
-                left: tooltip.x,
-                whiteSpace: 'nowrap'
-            }}
-        >
-            {tooltip.content}
-        </div>
+
     </div>
     );
 
