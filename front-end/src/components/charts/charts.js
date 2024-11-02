@@ -2,6 +2,7 @@ import React, { useEffect, useRef } from 'react';
 import * as d3 from 'd3';
 import WindowDimensions from '../hook/Dimensions';
 import Choropleth from './choropleth/Choropleth';
+import BarChart from './bar_chart/BarCharts';
 
 // import { choropleth, scatter_plot, initializeDensityChart, bar_chart } from '../charts'; // Adjust imports to your chart files
 
@@ -27,11 +28,13 @@ const DrawAllCharts = () => {
                 <Choropleth/>
             {/* </div>  */}
 
-            {/* <div id="right-container"> Right-side Buttons */}
-                {/* <button id="chart-btn" onClick={() => scatter_plot()}>Bubble Chart</button> */}
-                {/* <button id="chart-btn" onClick={() => initializeDensityChart()}>Distribution</button> */}
-                {/* <button id="chart-btn" onClick={() => bar_chart()}>Bar Chart</button> */}
-            {/* </div> */}
+            {/* <div id="right-container"> Right-side Buttons
+                <button id="chart-btn" onClick={() => scatter_plot()}>Bubble Chart</button>
+                <button id="chart-btn" onClick={() => initializeDensityChart()}>Distribution</button>
+                <button id="chart-btn" onClick={() => bar_chart()}>Bar Chart</button>
+            </div> */}
+            
+            <BarChart/>
         </div>
     );
 };
