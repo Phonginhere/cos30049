@@ -15,7 +15,7 @@ const Slider = ({ min = 1990, max = 2021, initialValue = 2020, onChange }) => {
 
     return (
         <div className="slider">
-            <span id="slider_min">Min</span>
+            <span id="slider_min">1990</span>
             <input
                 id="yearSlider"
                 type="range"
@@ -25,10 +25,11 @@ const Slider = ({ min = 1990, max = 2021, initialValue = 2020, onChange }) => {
                 onChange={handleSliderChange}
                 className="test"
             />
-            <span id="slider_max">Max</span>
-            <br />
+            <span id="slider_max">2021</span>
+            <br/>
             <span id="slider_value">Value: {value}</span>
         </div>
+        
     );
 };
 
