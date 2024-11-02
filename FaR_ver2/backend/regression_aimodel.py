@@ -77,40 +77,39 @@ class RegressionModel:
         x = dataset_cleaned['Exposure Mean'].values.reshape(-1, 1)
         y = dataset_cleaned['Burden Mean'].values
 
-        scaler = MinMaxScaler()
-        x_normalised = scaler.fit_transform(x)
+        scaler_x = MinMaxScaler()
+        scaler_y = MinMaxScaler()  # Added scaler for y
+        x_normalised = scaler_x.fit_transform(x)
+        y_normalised = scaler_y.fit_transform(y.reshape(-1, 1))  # Scaled y
 
-        return x_normalised, y
+        return x_normalised, y_normalised  # Return scaled y
             
-    def train_linear_model(self, x, y):
-        # Train the linear model
-        self.model_linear.fit(x, y)
-
-        # Make predictions on the training data
-        prediction = self.model_linear.predict(x)
-
-        # Evaluate the model using Mean Squared Error and R^2 score
-        mse = mean_squared_error(y, prediction)
-        r2 = r2_score(y, prediction)
-
-        self.linear_mse, self.linear_r2 = mse, r2
-
-        return mse, r2
-
-    def train_polynomial_model(self, x, y):
-        # Train the polynomial model using the pipeline
-        self.model_polynomial.fit(x, y)
-
-        # Make predictions on the training data
-        prediction = self.model_polynomial.predict(x)
-
-        # Evaluate the model using Mean Squared Error and R^2 score
-        mse = mean_squared_error(y, prediction)
-        r2 = r2_score(y, prediction)
-
-        self.poly_mse, self.poly_r2 = mse, r2
-
-        return mse, r2
+    def train_model(self, x, y):
+        # Split data into training and testing sets
+        X_train, X_test, y_train, y_test = train_test_split(
+            x, y, test_size=0.2, random_state=42
+        )
+        
+        # Train Linear Regression Model
+        self.model_linear.fit(X_train, y_train)
+        prediction_linear = self.model_linear.predict(X_test)
+        mse_linear = mean_squared_error(y_test, prediction_linear)
+        r2_linear = r2_score(y_test, prediction_linear)
+        
+        # Train Polynomial Regression Model using the pipeline
+        self.model_polynomial.fit(X_train, y_train)
+        prediction_poly = self.model_polynomial.predict(X_test)
+        mse_poly = mean_squared_error(y_test, prediction_poly)
+        r2_poly = r2_score(y_test, prediction_poly)
+        
+        # Store evaluation metrics
+        self.linear_mse, self.linear_r2 = mse_linear, r2_linear
+        self.poly_mse, self.poly_r2 = mse_poly, r2_poly
+        
+        return {
+            "Linear Regression": {"MSE": mse_linear, "R2": r2_linear},
+            "Polynomial Regression": {"MSE": mse_poly, "R2": r2_poly}
+        }
     
     def predict(self, input_exposure):
         # Compare model performance

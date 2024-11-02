@@ -1,0 +1,121 @@
+/* General Navbar styling */
+.navbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: #f8f9fa;
+    padding: 10px 20px;
+    border-bottom: 1px solid #ccc;
+  }
+  
+  .navbar-brand {
+    font-size: 1.5rem;
+    font-weight: bold;
+  }
+  
+  /* Desktop Links */
+  .desktop-links {
+    display: flex;
+    gap: 20px;
+  }
+  
+  .desktop-links .nav-link {
+    text-decoration: none;
+    font-size: 1.2rem;
+    color: #333;
+  }
+  
+  /* Mobile Toggle Button */
+  .navbar-toggler {
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+    display: none; /* Hidden on desktop */
+  }
+  
+  /* Sidebar styling for Mobile */
+  .sidebar {
+    position: fixed;
+    top: 0;
+    right: -250px;
+    width: 250px;
+    height: 100%;
+    background-color: #f8f9fa;
+    box-shadow: -2px 0 5px rgba(0, 0, 0, 0.5);
+    padding: 20px;
+    transition: right 0.3s ease;
+    z-index: 1000;
+  }
+  
+  .sidebar.open {
+    right: 0;
+  }
+  
+  .sidebar ul {
+    list-style-type: none;
+    padding: 0;
+  }
+  
+  .sidebar li {
+    margin: 20px 0;
+  }
+  
+  .sidebar a {
+    text-decoration: none;
+    font-size: 1.2rem;
+    color: #333;
+  }
+  
+  .close-btn {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+  }
+  
+  /* Overlay styling */
+  .overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 999;
+  }
+  
+  /* Media Queries for Responsive Design */
+  @media (min-width: 768px) {
+    /* Show desktop links and hide the sidebar and toggler on larger screens */
+    .desktop-links {
+      display: flex;
+    }
+  
+    .navbar-toggler {
+      display: none;
+    }
+  
+    .sidebar {
+      display: none;
+    }
+  
+    .overlay {
+      display: none;
+    }
+  }
+  
+  @media (max-width: 767px) {
+    /* Hide desktop links on smaller screens and show the toggler */
+    .desktop-links {
+      display: none;
+    }
+  
+    .navbar-toggler {
+      display: block;
+    }
+  }
+  

@@ -3,19 +3,27 @@ from pydantic import BaseModel, validator
 from typing import Union, List  # Added List
 import pandas as pd
 import os
-from sklearn.preprocessing import MinMaxScaler  # Added import
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse  # Added import
+
+
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import PolynomialFeatures, MinMaxScaler
+from sklearn.linear_model import LinearRegression
+from sklearn.metrics import r2_score, mean_squared_error 
+from joblib import dump, load
+import os
+from sklearn.pipeline import Pipeline  # Added for pipeline
+
 
 # Import regression_aimodel.py
 from backend.regression_aimodel import RegressionModel
 
 app = FastAPI()
 
-# Add CORS middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],  # React frontend URL
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -118,28 +126,95 @@ def validate_data(input_data: ValidationInput):
 
 # Prediction endpoint updated with ISO3
 def predict_burden(input_data: ValidationInput):
-    try:
-        # Prediction logic
-        regression_model = RegressionModel()
-        x_normalised, y = regression_model.preprocess_data(input_data.iso3, input_data.pollutant)
-        
-        # Train both models
-        regression_model.train_linear_model(x_normalised, y)
-        regression_model.train_polynomial_model(x_normalised, y)
-        
-        # Prepare input for prediction
-        input_exposure = [[input_data.exposure_mean]]
-        scaler = MinMaxScaler()
-        input_exposure_normalised = scaler.fit_transform(input_exposure)
-        
-        predicted_burden = regression_model.predict(input_exposure_normalised)[0]  # Assuming single input
-        return PredictionOutput(predicted_burden_mean=predicted_burden)
-    except ValueError as ve:
-        raise HTTPException(status_code=400, detail=[str(ve)])
-    except KeyError as ke:
-        raise HTTPException(status_code=500, detail=[str(ke)])
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=[str(e)])
+    dataset = pd.read_csv(CSV_FILE_PATH)
+   # Outlier removal for 'Exposure Mean'
+    Q1_exposure = dataset['Exposure Mean'].quantile(0.25)
+    Q3_exposure = dataset['Exposure Mean'].quantile(0.75)
+    IQR_exposure = Q3_exposure - Q1_exposure
+    lower_bound_exposure = Q1_exposure - 1.5 * IQR_exposure
+    upper_bound_exposure = Q3_exposure + 1.5 * IQR_exposure
+
+    # Outlier removal for 'Burden Mean'
+    Q1_burden = dataset['Burden Mean'].quantile(0.25)
+    Q3_burden = dataset['Burden Mean'].quantile(0.75)
+    IQR_burden = Q3_burden - Q1_burden
+    lower_bound_burden = Q1_burden - 1.5 * IQR_burden
+    upper_bound_burden = Q3_burden + 1.5 * IQR_burden
+
+    # Clean dataset by removing outliers
+    dataset_cleaned = dataset[
+        (dataset['Exposure Mean'] >= lower_bound_exposure) & 
+        (dataset['Exposure Mean'] <= upper_bound_exposure) & 
+        (dataset['Burden Mean'] >= lower_bound_burden) & 
+        (dataset['Burden Mean'] <= upper_bound_burden)
+    ]
+
+    # Filter dataset based on specific criteria
+    filtered_df = dataset_cleaned[
+        (dataset_cleaned['Cause_Name'] == 'All causes') &
+        (dataset_cleaned['ISO3'] == input_data.iso3) &
+        (dataset_cleaned['Pollutant'] == input_data.pollutant)
+    ]
+
+    if len(filtered_df) == 0:
+        return f"Filtered Data Points : {len(filtered_df)}"
+
+    # Feature and target variables
+    X = filtered_df[['Exposure Mean']].values
+    y = filtered_df['Burden Mean'].values
+
+    # Scale features and target
+    scaler_X = MinMaxScaler()
+    scaler_y = MinMaxScaler()
+    X_scaled = scaler_X.fit_transform(X)
+    y_scaled = scaler_y.fit_transform(y.reshape(-1, 1))
+
+    # Split data into training and testing sets
+    X_train, X_test, y_train, y_test = train_test_split(
+        X_scaled, y_scaled, test_size=0.2, random_state=42
+    )
+
+    # ----- Linear Regression Model -----
+    model_linear = LinearRegression()
+    model_linear.fit(X_train, y_train)
+    y_pred_linear = model_linear.predict(X_test)
+
+    # Evaluation Metrics for Linear Regression
+    mse_linear = mean_squared_error(y_test, y_pred_linear)
+    r2_linear = r2_score(y_test, y_pred_linear)
+
+    # ----- Polynomial Regression Model (degree 4) -----
+    poly = PolynomialFeatures(degree=4)
+    X_train_poly = poly.fit_transform(X_train)
+    X_test_poly = poly.transform(X_test)
+
+    model_poly = LinearRegression()
+    model_poly.fit(X_train_poly, y_train)
+    y_pred_poly = model_poly.predict(X_test_poly)
+
+    # Evaluation Metrics for Polynomial Regression
+    mse_poly = mean_squared_error(y_test, y_pred_poly)
+    r2_poly = r2_score(y_test, y_pred_poly)
+
+    # ----- Make Prediction for the Given Exposure Value -----
+    # For Linear Regression
+    burden_prediction_linear = model_linear.predict(scaler_X.transform([[input_data.exposure_mean]]))[0]
+    burden_prediction_rescaled_linear = scaler_y.inverse_transform([burden_prediction_linear])[0, 0]
+
+    # For Polynomial Regression
+    exposure_value_scaled = scaler_X.transform([[input_data.exposure_mean]])
+    exposure_value_poly = poly.transform(exposure_value_scaled)
+    burden_prediction_poly = model_poly.predict(exposure_value_poly)[0]
+    burden_prediction_rescaled_poly = scaler_y.inverse_transform([burden_prediction_poly])[0, 0]
+
+    # Determine which model is better
+    if mse_linear < mse_poly and r2_linear > r2_poly:
+        prediction = burden_prediction_rescaled_linear
+    elif mse_poly < mse_linear and r2_poly > r2_linear:
+        prediction = burden_prediction_rescaled_poly
+
+    return PredictionOutput(predicted_burden_mean=float(prediction))
+    
 
 @app.post("/predict")
 async def predict(input_data: ValidationInput):
