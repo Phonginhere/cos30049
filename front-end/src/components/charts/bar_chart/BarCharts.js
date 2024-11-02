@@ -3,7 +3,7 @@ import * as d3 from 'd3';
 import WindowDimensions from '../../hook/Dimensions';
 import all_countries_data_processed from '../../ProcessedData/air_quality_health.csv';
 // import '../charts/chart_styles.css'; // Import your existing styles if any
-
+import '../chart_styles.css'
 const BarChart = () => {
     const svgRef = useRef();
     // IBM Design Library Colors
@@ -41,19 +41,20 @@ const BarChart = () => {
         padding: window.innerWidth*0.04,
         radius: window.innerWidth*0.4*0.0066666,
         border: 1,
-        fontSize: window.innerWidth*0.4/600 //rem
+        fontSize: window.innerWidth*0.43/700 //rem
     };
 
     useEffect(() => {
-        
         function draw_chart(init_data) {
             // d3.select("#barchart").remove();
+            createBarSection();
             createPollutantOption();
 
             const xScale = d3.scaleBand();
             const yScale = d3.scaleLinear();
             
-            var container = d3.select(svgRef.current)
+            // var container = d3.select(svgRef.current)
+            var container = d3.select('#barchart')
                                 .append('svg')
                                 .attr('id', 'barchart-container')
                                 .attr("width", cfg.w+2*cfg.padding)
@@ -61,11 +62,7 @@ const BarChart = () => {
             
             console.log(svgRef.current);
 
-            const svg = container
-                            .append("svg")
-                            .attr("id", "barchart-svg")
-                            .attr("width", cfg.w)
-                            .attr("height", cfg.h);
+            var svg;
     
             // Get value from Year Slider
             const slider = document.getElementById('yearSlider');
@@ -89,7 +86,8 @@ const BarChart = () => {
             });
             
             // Update on Slider change
-            slider.addEventListener('input', function() {
+            // slider.addEventListener('input', function() {
+            slider.addEventListener('change', function() {
                 year_slider = slider.value;
                 pollutant_change = pollutant_option.value;
                 if (lastClickedCountry !== null){
@@ -131,7 +129,7 @@ const BarChart = () => {
         
                     container.select("#chart-title").remove();
                     container.append("text")
-                        .attr("x", cfg.w / 2)
+                        .attr("x", (cfg.w+cfg.padding*2) / 2)
                         .attr("y", cfg.padding / 2)
                         .attr("id", "chart-title")
                         .style("text-anchor", "middle")
@@ -145,28 +143,19 @@ const BarChart = () => {
                     bars.enter()
                         .append("rect")
                         .merge(bars)
+                        .transition()
+                        .duration(500)
                         .attr("x", function(d) { return xScale(d.Cause_Name)+ xScale.bandwidth()*0.29; })
                         .attr("y", function(d) { return yScale(d['Burden Mean'])-cfg.padding; })
                         .attr("width", xScale.bandwidth() * 0.4)
                         .attr("height", function(d) { return cfg.h - yScale(d['Burden Mean']); })
                         .attr("fill", d => colorScale(d.Cause_Name))
                         // 
-                        .transition()
-                        .duration(500)
+                        // .transition()
+                        // .duration(500)
         
                     bars.exit().remove();
 
-                    // var labels = svg.selectAll("label")
-                    //                 .data(data)
-                    
-                    // labels.enter()
-                    //     .append("text")
-                    //     .merge(labels)
-                    //     .text(function (d) { return Math.round(d['Burden Mean'] * 100) / 100; })
-                    //     .attr("x", function(d) { return xScale(d.Cause_Name) + xScale.bandwidth() / 2; })
-                    //     .attr("y", function(d) { return yScale(d['Burden Mean']); })
-                    //     .transition()
-                    //     .duration(500) ;
                 });
             }
     
@@ -198,7 +187,15 @@ const BarChart = () => {
                     var maxDomainYAxis = d3.max(data, function(d) {return d['Burden Mean'];});
                     yScale.range([cfg.h, 0])
                         .domain([0, Math.ceil(maxDomainYAxis / 100) * 100+ maxDomainYAxis/5]);
-        
+                    
+                    svg = container 
+                        .append("svg")
+                        .attr('id', 'bar-svg')
+                        .attr('x',0)
+                        .attr('y',cfg.padding)
+                        .attr("width", cfg.w)
+                        .attr("height", cfg.h+cfg.padding);
+
                     var xAxis = svg.append("g")
                         .attr("class", "x-axis")
                         .attr("transform", "translate("+0+"," + (cfg.h - cfg.padding) + ")")
@@ -238,7 +235,7 @@ const BarChart = () => {
                     
                     // Title
                     container.append("text")
-                        .attr("x", cfg.w / 2)
+                        .attr("x", (cfg.w+cfg.padding*2) / 2)
                         .attr("y", cfg.padding / 2)
                         .attr("id", "chart-title")
                         .style("text-anchor", "middle")
@@ -257,30 +254,12 @@ const BarChart = () => {
                         .attr("height", function(d) { return cfg.h - yScale(d['Burden Mean']); })
                         // .attr("fill", "#69b3a2");
                         .attr("fill", function (d) { return colorScale(d.Cause_Name); });
-        
-                    // barchart.selectAll("label")
-                    //     .data(data)
-                    //     .enter()
-                    //     .append("text")
-                    //     .attr("x", function(d) { return xScale(d.Cause_Name) + xScale.bandwidth() / 2; })
-                    //     .attr("y", function(d) { return yScale(d['Burden Mean']); })
-                    //     .style("text-anchor", "middle")
-                    //     .style("font-size", "10px");
-        
-                    // barchart.selectAll("label")
-                    //     .data(data)
-                    //     .enter()
-                    //     .append("text")
-                    //     .text(function (d) { return Math.round(d['Burden Mean'] * 100) / 100; })
-                    //     .attr("x", function(d) { return xScale(d.Cause_Name) + xScale.bandwidth() / 2; })
-                    //     .attr("y", function(d) { return yScale(d['Burden Mean']); })
-                    //     .style("text-anchor", "middle")
-                    //     .style("font-size", "10px");
+    
 
                      // Create legend with IBM colors
                     var legend = container.append("g")
                     .attr("id", "legend")
-                    .attr("transform", `translate(${cfg.w - cfg.padding*1.2}, 20)`);
+                    .attr("transform", `translate(${cfg.w - cfg.padding*1.2}, ${cfg.padding})`);
         
                     legend.selectAll("rect")
                         .data(data)
@@ -324,7 +303,7 @@ const BarChart = () => {
             
             
             function createPollutantOption(){
-                var plotOptionDiv = d3.select(svgRef.current)
+                var plotOptionDiv = d3.select('#barchart')
                     .append("div")
                     .attr("id", "barchart-option");
             
@@ -353,7 +332,11 @@ const BarChart = () => {
                     .text("Hazardous Air Pollutants");
             }
         }
-
+        function createBarSection(){
+            d3.select("#right-container")
+                .append("div")  
+                .attr("id", "barchart");
+        }
         d3.csv(all_countries_data_processed).then(data => {
             data = data.filter(function(d) {return d.Cause_Name !== 'All causes'})
             console.log("Data loaded:", data);
@@ -364,7 +347,9 @@ const BarChart = () => {
         
     }, []); // Only run once on component mount
 
+    // return <div id='barchart' ref={svgRef}></div>;
     return <div id='barchart' ref={svgRef}></div>;
+    // return <button id="chart-btn" onClick={() => ref={svgRef}}>Bar Chart</button>
 }; 
 
 

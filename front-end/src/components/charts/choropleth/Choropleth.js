@@ -4,6 +4,7 @@ import WindowDimensions from '../../hook/Dimensions';
 import all_countries_data_processed from '../../ProcessedData/all_countries_data_processed.csv'
 import world from './world.json'
 import MouseHandler from '../../mouse_move/MouseHandler';
+import '../chart_styles.css'
 
 
 // import '../charts/chart_styles.css'; // Import your existing styles if any
@@ -64,7 +65,8 @@ const Choropleth = () => {
             drawChart();
             const slider = document.getElementById('yearSlider');
             const year = slider.value;
-            slider.addEventListener('input', function(event) {
+            // slider.addEventListener('input', function(event) {
+            slider.addEventListener('change', function(event) {
 
                 let year = slider.value;
                 get_data_from_year(year).then(function(data) {

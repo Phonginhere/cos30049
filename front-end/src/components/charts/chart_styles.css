@@ -36,6 +36,7 @@
     margin-bottom: 20px; /* Add some margin between the charts */
     padding: 10px; /* Add some padding inside the border */
 }
+
 #plot #plot-container #strokes-container {
     border: 1px solid #ccc;
 }

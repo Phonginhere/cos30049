@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import './SliderStyles.css';
 
-const Slider = ({ min = 1990, max = 2021, initialValue = 2020, onChange }) => {
+const Slider = ({ min = 1990, max = 2020, initialValue = 2020, onChange }) => {
     const [value, setValue] = useState(initialValue);
 
     const handleSliderChange = (event) => {
@@ -25,7 +25,7 @@ const Slider = ({ min = 1990, max = 2021, initialValue = 2020, onChange }) => {
                 onChange={handleSliderChange}
                 className="test"
             />
-            <span id="slider_max">2021</span>
+            <span id="slider_max">2020</span>
             <br/>
             <span id="slider_value">Value: {value}</span>
         </div>
