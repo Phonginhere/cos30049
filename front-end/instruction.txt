@@ -1,0 +1,27 @@
+# Initialize react envs
+npx create-react-app front-end
+
+
+# To start the app
+cd front-end
+npm start
+
+# Install axios
+npm install axios
+
+# Run the prediction model
+cd front-end
+uvicorn app.main:app --reload
+
+
+
+# Modify components
+
+    ## Create new dir for components
+    mkdir components
+    cd components
+
+
+
+
+
