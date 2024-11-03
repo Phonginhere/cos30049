@@ -140,6 +140,12 @@ const BubblePlot = () => {
 
 
         function drawChart(x_update = null, y_update = null, chart_year = "2020",pollutant = 'pm25'){
+            `
+                This function will select select data based on the current Axis of the chart
+                Eg: xAxis_option = pm25 ; yAxis_option = no2
+                    => get cx => data.[xAxis_option ] = data.pm25
+                    => get yx => data.[yAxis_option ] = data.no2
+            `
             return filterData(chart_year,pollutant).then(function(data){
                 var xAxis_option;
                 var yAxis_option;
