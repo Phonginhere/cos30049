@@ -1,5 +1,7 @@
 import React from 'react';
 
+import FormInput from '../components/FormInputPrediction';
+
 import HeroSection from '../dynamic_components/HeroSectionGraphPage';
 
 function GraphPage() {
@@ -15,7 +17,7 @@ function GraphPage() {
             <div className="mt-5">
                 <div className="text-center">
                     <h2>User Input Form</h2>
-                    <p>This is where the User Input Form will be displayed.</p>
+                    <FormInput />
                 </div>
             </div>
         </div>
