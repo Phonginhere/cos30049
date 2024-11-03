@@ -165,7 +165,6 @@ const BarChart = () => {
                     var datafilter = data.filter(function(d) {
                     return (d.ISO3 === country_code && d.Year === year && d.Pollutant === pollutant && d.Cause_Name !== 'All causes');
                     })
-                    console.log(datafilter);
                     return datafilter;
                 });
                 

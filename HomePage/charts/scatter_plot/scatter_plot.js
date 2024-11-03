@@ -266,6 +266,7 @@ function scatter_plot(){
             return data;
         }
     }
+
     function handleMouseOver(event, d) {
 
         tooltip = d3.select("#plot")
@@ -356,6 +357,8 @@ function scatter_plot(){
                 var xAxisData = get_data_by_axis(data,xAxis_option);
                 var yAxisData = get_data_by_axis(data,yAxis_option);
             }
+            console.log(xAxisData);
+            
             var mergedData = filter_null_data(data, [xAxis_option, yAxis_option]);
             // console.log(xAxisData);
             population_scale = d3.scaleSqrt()
@@ -550,8 +553,18 @@ function scatter_plot(){
                     .append("circle")
                     .attr("id", "stroke")
                     .attr("class", function(d) { return "bubbles " + d.continent })
-                    .attr("cx", d => xScale(d[xAxis_option]))
-                    .attr("cy", d => yScale(d[yAxis_option]))
+                    // .attr("cx", d => xScale(d[xAxis_option]))
+                    // .attr("cy", d => yScale(d[yAxis_option]))
+                    .attr("cx", d => {
+                        const cx = xScale(d[xAxis_option]);
+                        // console.log("cx for", d, ":", cx);
+                        return cx;
+                    })
+                    .attr("cy", d => {
+                        const cy = yScale(d[yAxis_option]);
+                        // console.log("cy for", d, ":", cy);
+                        return cy;
+                    })
                     .on("mouseover", handleMouseOver)
                     .on("mouseout", handleMouseOut)
                     .transition().duration(700)

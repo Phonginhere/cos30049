@@ -297,7 +297,6 @@ const Choropleth = () => {
         
 
         d3.csv(all_countries_data_processed).then(data => {
-            console.log("Data loaded:", data);
             drawChoropleth(data);
         }).catch(error => {
             console.error("Error loading data:", error);

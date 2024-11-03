@@ -5,7 +5,7 @@ import BubblePlot from './bubble_chart/BubblePlot';
 import './chart_styles.css';
 
 const DrawAllCharts = () => {
-    const [selectedChart, setSelectedChart] = useState('bar'); // State to control which chart to display
+    const [selectedChart, setSelectedChart] = useState('bubble'); // State to control which chart to display
 
     useEffect(() => {
         try {
