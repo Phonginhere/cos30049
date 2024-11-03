@@ -7,6 +7,8 @@ import country_continent from '../../ProcessedData/country_continent.csv';
 import '../chart_styles.css'
 
 const BubblePlot = () => {
+    d3.select("#plot").remove();
+    d3.select("#barchart").remove();
     const containerRef = useRef();
     const [tooltip, setTooltip] = useState({ visible: false, x: 0, y: 0, content: '' });
     var cfg = {
@@ -100,14 +102,19 @@ const BubblePlot = () => {
                 var continentData = data[1];
                 var populationData = data[2];
 
+
+
+                return data;
                 
             });
         }
 
 
 
-        function drawChart(){
-
+        function drawChart(x_update, y_update, chart_year = "2020",pollutant = 'pm25'){
+            return filterData(chart_year,pollutant).then(function(data){
+                console.log(data);
+            });
         }
 
 

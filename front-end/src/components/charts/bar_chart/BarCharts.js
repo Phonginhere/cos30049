@@ -4,6 +4,8 @@ import all_countries_data_processed from '../../ProcessedData/air_quality_health
 // import '../charts/chart_styles.css'; // Import your existing styles if any
 import '../chart_styles.css'
 const BarChart = () => {
+    d3.select("#plot").remove();
+    d3.select("#barchart").remove();
     const svgRef = useRef();
     // IBM Design Library Colors
     const ibmColors = [
@@ -347,7 +349,7 @@ const BarChart = () => {
     }, []); // Only run once on component mount
 
     // return <div id='barchart' ref={svgRef}></div>;
-    return <div id='barchart' ref={svgRef}></div>;
+    return <div ref={svgRef}></div>;
     // return <button id="chart-btn" onClick={() => ref={svgRef}}>Bar Chart</button>
 }; 
 

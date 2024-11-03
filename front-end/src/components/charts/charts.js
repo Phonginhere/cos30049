@@ -1,44 +1,40 @@
-import React, { useEffect, useRef } from 'react';
-import * as d3 from 'd3';
-import WindowDimensions from '../hook/Dimensions';
+import React, { useEffect, useState } from 'react';
 import Choropleth from './choropleth/Choropleth';
 import BarChart from './bar_chart/BarCharts';
 import BubblePlot from './bubble_chart/BubblePlot';
-
-import './chart_styles.css'
-
-// import { choropleth, scatter_plot, initializeDensityChart, bar_chart } from '../charts'; // Adjust imports to your chart files
-
-// import '../charts/chart_styles.css'; // Import your existing styles if any
+import './chart_styles.css';
 
 const DrawAllCharts = () => {
+    const [selectedChart, setSelectedChart] = useState('bar'); // State to control which chart to display
 
     useEffect(() => {
         try {
-            // Initialization or chart rendering logic here
             console.log("DrawAllCharts Mounted");
-
         } catch (error) {
             console.error("Error in DrawAllCharts:", error);
         }
+    }, []);
 
-    }, []); // Only run once on component mount
+    const handleBubblePlotClick = () => {
+        setSelectedChart('bubble');
+    };
+
+    const handleBarChartClick = () => {
+        setSelectedChart('bar');
+    };
 
     return (
         <div className="charts">
-            {/* <Choropleth/> */}
-            {/* <div id="choropleth"> */}
-                <Choropleth/>
-            {/* </div>  */}
+            {/* Display Choropleth chart by default */}
+            <Choropleth />
 
             <div id="right-container">
-                <button id="chart-btn" onClick={() => <BubblePlot/>}>Bubble Chart</button>
-                {/* <button id="chart-btn" onClick={() => initializeDensityChart()}>Distribution</button> */}
-                {/* <button id="chart-btn" onClick={() => <Choropleth/>}>Distribution</button> */}
-                <button id="chart-btn" onClick={() => <BarChart/>}>Bar Chart</button>
+                <button id="chart-btn" onClick={handleBubblePlotClick}>Bubble Chart</button>
+                <button id="chart-btn" onClick={handleBarChartClick}>Bar Chart</button>
+                {selectedChart === 'bubble' && <BubblePlot />}
+                {selectedChart === 'bar' && <BarChart />}
             </div>
-            
-            <BarChart/>
+
         </div>
     );
 };
