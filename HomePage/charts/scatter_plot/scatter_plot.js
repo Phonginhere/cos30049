@@ -343,6 +343,11 @@ function scatter_plot(){
     }
 
     function draw_chart(x_update, y_update, chart_year = "2021"){
+        // This function will select select data based on the current Axis of the chart
+        // Eg: xAxis_option = pm25 ; yAxis_option = no2
+        //      => get cx => data.[xAxis_option ] = data.pm25
+        //      => get yx => data.[yAxis_option ] = data.no2
+        
         return get_data_from_year(chart_year).then(function(data){
             if (x_update == null && y_update == null){
                 var axis_option = handleAxisChange();
