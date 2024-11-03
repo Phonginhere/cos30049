@@ -54,6 +54,15 @@ const BubblePlot = () => {
         x_option.addEventListener('input', handleAxisChange);
         y_option.addEventListener('input', handleAxisChange);
 
+
+        const slider = document.getElementById('yearSlider');
+        const year = slider.value;  
+
+        var pollutant;
+        var x_update;
+        var y_update;
+        var chart_year;
+
         function handleAxisChange(update = false) {
             let x = x_option.value;
             let y = y_option.value;
@@ -62,7 +71,7 @@ const BubblePlot = () => {
                 console.log("UPDATE");
             }
             else{
-                return [x, y]; 
+                return [x,y]; 
             }
         }
 
@@ -70,30 +79,37 @@ const BubblePlot = () => {
         //     // recover the option that has been chosen
         //     var selectedOption = d3.select(this).property("value")
         //     // run the updateChart function with this selected option
-        //     update_option_axis(update_x = null, update_y = selectedOption)
+        //     update_option_axis(x_update = null, y_update = selectedOption)
         // })
-        // d3.select("#xAxis_option").on("change", function(d) {
-        //     // recover the option that has been chosen
-        //     var selectedOption = d3.select(this).property("value")
-        //     // run the updateChart function with this selected option
-        //     update_option_axis(update_x = selectedOption, update_y = null)
-        // })
+        d3.select("#xAxis_option").on("change", function(d) {
+            // recover the option that has been chosen
+            var selectedOption = d3.select(this).property("value")
+            // run the updateChart function with this selected option
+            update_option_axis(x_update = selectedOption, y_update = null)
+        })
 
-        drawChart();
 
-        const slider = document.getElementById('yearSlider');
-        const year = slider.value;  
 
         // Get value from Year Slider
-        // slider.addEventListener('input', function() {
-        //     let year = slider.value;
-        //     get_data_from_year(year).then(function(data){
-        //         updatePlot(data,chart_year = year);
-        //     });
-        // });
+        slider.addEventListener('input', function() {
+            let year = slider.value;
+            return filterData(year, pollutant).then(function(data){
+                updatePlot(data,chart_year = year);
+            });
+        });
 
-        // draw_chart(x_update = null, y_update = null);
+        drawChart(x_update = null, y_update = null, chart_year = "2020",pollutant = 'pm25');
 
+        function update_option_axis(update_x, update_y){
+            if (update_x === null){
+                update_x = x_option.value;
+            }    
+            if (update_y === null){
+                update_y = y_option.value;
+            }
+            d3.select("#plot-svg").remove();
+            drawChart(x_update = update_x, y_update = update_y, chart_year, pollutant = update_x);
+        }
 
         function filterData(year, pollutant){
             return Promise.all([
@@ -105,11 +121,12 @@ const BubblePlot = () => {
                 var continentData = data[1];
                 var populationData = data[2];
 
-
+                
                 // var airQualityHealthFilter = airQualityHealth.filter(function(d) {
                 // return (d.Year === year && d.Pollutant === pollutant && d.Cause_Name !== 'All causes');
                 // })
-                var airQualityHealthFilter = airQualityHealth.filter(d => (d.Year === year && d.Pollutant === pollutant && d.Cause_Name !== 'All causes'));
+                var airQualityHealthFilter = airQualityHealth.filter(d => (d.Year === year && d.Pollutant === pollutant && d['Cause Name'] === 'All causes'));
+                console.log(airQualityHealthFilter);
                 var population_in_year = populationData.filter(d => d.Year === year);
                 var mergedData = airQualityHealthFilter.map(d => {
                     var continentMatch = continentData.find(c => c.Country_code === d.ISO3);
@@ -117,10 +134,11 @@ const BubblePlot = () => {
                     return{
                         countryCode: d.ISO3,
                         country: d.Country,
-                        exposureMean: d['Exposure Mean'],
-                        burdenMean: d['Burden Mean'],
+                        exposureMean: +d['Exposure Mean'],
+                        burdenMean: +d['Burden Mean'],
                         pollutant: d.Pollutant,
                         unit: d.Units,
+                        causeName: d['Cause Name'],
                         population: populationMatch ? populationMatch.Population : null,
                         continent: continentMatch ? continentMatch.Continent : null,
                     }
@@ -136,16 +154,54 @@ const BubblePlot = () => {
             });
         }
 
+        function updatePlot(data,chart_year) {
+            var xAxis_option;
+            var yAxis_option;
+            var axis_option = handleAxisChange();
+            xAxis_option = axis_option[0];
+            yAxis_option = axis_option[1];
+            // var xAxisData = get_data_by_axis(data,xAxis_option);
+            // var yAxisData = get_data_by_axis(data,yAxis_option);
+    
+            xScale
+                .domain([d3.min(data, d => {return d.exposureMean})-10, d3.max(data, d => {return d.exposureMean})+10])
+                .range([0, cfg.w - cfg.padding*2]);
+            yScale
+                .domain([d3.min(data, d => {return d.burdenMean})-10 , d3.max(data, d => {return d.burdenMean})+10])
+                .range([cfg.h - cfg.padding*2, 0]);     
+    
+            var xAxis = d3.axisBottom(xScale).ticks(7);
+            var yAxis = d3.axisLeft(yScale).ticks(7);
+    
+            svg.select(".x-axis").transition().duration(300).call(xAxis);
+            svg.select(".y-axis").transition().duration(300).call(yAxis);
+    
+            var circles = svg.selectAll("circle")
+                .data(data);
+            
+            circles.enter()
+                .append("circle")
+                .merge(circles)
+                .transition().duration(300)
+                .attr("cx", d => xScale(d.exposureMean))
+                .attr("cy", d => yScale(d.burdenMean))
+                .attr("r", function(d) { return population_scale(d.population)})
+                .attr("stroke", "black");
+    
+            circles.exit().remove();
+    
+            svg.select("#chart-year").remove();
+            svg.append("text")
+                    .attr("x", cfg.w / 2)
+                    .attr("y", cfg.padding / 2)
+                    .attr("id", "chart-year")
+                    .style("text-anchor", "middle")
+                    .style("font-size", `${cfg.fontSize} px`) // Set the font size here
+                    .text(title_name(xAxis_option,yAxis_option,chart_year));
+        }
+    
 
-
-
-        function drawChart(x_update = null, y_update = null, chart_year = "2020",pollutant = 'pm25'){
-            `
-                This function will select select data based on the current Axis of the chart
-                Eg: xAxis_option = pm25 ; yAxis_option = no2
-                    => get cx => data.[xAxis_option ] = data.pm25
-                    => get yx => data.[yAxis_option ] = data.no2
-            `
+        function drawChart(x_update, y_update, chart_year = "2020",pollutant = "pm25"){
             return filterData(chart_year,pollutant).then(function(data){
                 var xAxis_option;
                 var yAxis_option;
@@ -153,25 +209,29 @@ const BubblePlot = () => {
                     var axis_option = handleAxisChange();
                     xAxis_option = axis_option[0];
                     yAxis_option = axis_option[1];
+                    console.log(xAxis_option, yAxis_option);
                     var xAxisData = get_data_by_axis(data,xAxis_option);
-                    var yAxisData = get_data_by_axis(data,yAxis_option);
+                    // var yAxisData = get_data_by_axis(data,yAxis_option);
                 }
                 else{
                     xAxis_option = x_update;
                     yAxis_option = y_update;
+                    console.log(xAxis_option, yAxis_option);
                     var xAxisData = get_data_by_axis(data,xAxis_option);
-                    var yAxisData = get_data_by_axis(data,yAxis_option);
+                    // var yAxisData = get_data_by_axis(data,yAxis_option);
                 }
-                var mergedData = filter_null_data(data, [xAxis_option, yAxis_option]);
+                // console.log(xAxisData);
+                var mergedData = filter_null_data(data, [xAxis_option]);
 
                 population_scale 
                     .domain([d3.max(mergedData, d => d.population), d3.min(mergedData, d => d.population)])
                     .range([ cfg.radius, cfg.radius*1.01]);
+                
                 xScale
                     .domain([d3.min(xAxisData)-10, d3.max(xAxisData)+10])
                     .range([0, cfg.w - cfg.padding*2]);
                 yScale
-                    .domain([d3.min(yAxisData)-10 , d3.max(yAxisData)+10])
+                    .domain([d3.min(data, d => {return d.burdenMean})-10 , d3.max(data, d => {return d.burdenMean})+10])
                     .range([cfg.h - cfg.padding*2, 0]);    
                     
                 var xAxis = d3.axisBottom(xScale).ticks(7);
@@ -235,8 +295,8 @@ const BubblePlot = () => {
                     svg.select(".x-axis").call(xAxis);
                     svg.select(".y-axis").call(yAxis);
                     svg.selectAll("circle")
-                        .attr("cx", d => newXScale(d[xAxis_option]))
-                        .attr("cy", d => newYScale(d[yAxis_option]));
+                        .attr("cx", d => newXScale(d.exposureMean))
+                        .attr("cy", d => newYScale(d.burdenMean));
                 }
                 // Title
                 svg.append("text")
@@ -335,10 +395,9 @@ const BubblePlot = () => {
                         .on("mouseover", highlight)
                         .on("mouseleave", noHighlight)
 
-                    const testData = { [xAxis_option]: 100 }; // Example data object
+                    // const testData = { [xAxis_option]: 100 }; // Example data object
                     // console.log(xScale(testData[xAxis_option]));
                     console.log(mergedData);    
-                    console.log(xAxis_option);
                     strokes.selectAll("circle")
                         .data(mergedData)
                         .enter()
@@ -357,7 +416,7 @@ const BubblePlot = () => {
                         })
                         .attr("cy", d => {
                             // const cy = yScale(d[yAxis_option]);
-                            const cy = yScale((d.burdenMean));
+                            const cy = yScale(d.burdenMean);
                             // console.log("cy for", d, ":", cy);
                             return cy;
                         })
@@ -389,7 +448,7 @@ const BubblePlot = () => {
             // Adding label and select elements to the plot-option div for X Axis
             plotOptionDiv.append("label")
                 .attr("for", "xAxis_option")
-                .text("X Axis Option: ");
+                .text("X Axis Option (Exposure to Pollutant type): ");
         
             var xAxisSelect = plotOptionDiv.append("select")
                 .attr("id", "xAxis_option")
@@ -408,7 +467,7 @@ const BubblePlot = () => {
                 .text("Ozone");
             xAxisSelect.append("option")
                 .attr("value", "hap")
-                .text("Household Air Pollution");
+                .text("Household Air Pollution from Solid Fuels");
         
             // Adding some spacing between the X Axis and Y Axis options
             plotOptionDiv.append("span")
@@ -417,14 +476,14 @@ const BubblePlot = () => {
             // Adding label and select elements to the plot-option div for Y Axis
             plotOptionDiv.append("label")
                 .attr("for", "yAxis_option")
-                .text("Y Axis Option: ");
+                .text("Y Axis Option (Life Lost Rate): ");
         
             var yAxisSelect = plotOptionDiv.append("select")
                 .attr("id", "yAxis_option")
                 .attr("name", "yAxis_option");
         
             yAxisSelect.append("option")
-                .attr("value", "dalys")
+                .attr("value", "daly")
                 .text("Disability-adjusted Life Years");
         
         }
@@ -495,7 +554,7 @@ const BubblePlot = () => {
                 if (axis == 'hap'){
                     return d.exposureMean;
                 }
-                if (axis == 'dalys'){
+                if (axis == 'daly'){
                     return d.burdenMean;
                 }
                 return null;
@@ -522,7 +581,7 @@ const BubblePlot = () => {
             else if (xAxis == 'hap') {
                 title_x = "HAP";
             }
-            else if (xAxis == 'dalys') {
+            else if (xAxis == 'daly') {
                 title_x = "DALYs";
             }
     
@@ -539,7 +598,7 @@ const BubblePlot = () => {
             else if (yAxis == 'hap') {
                 title_y = "HAP";
             }
-            else if (yAxis == 'dalys') {
+            else if (yAxis == 'daly') {
                 title_y = "DALYs";
             }
 
@@ -559,7 +618,7 @@ const BubblePlot = () => {
             else if (axis == 'hap') {
                 return "HAP";
             }
-            else if (axis == 'dalys') {
+            else if (axis == 'daly') {
                 return "DALYs";
             }
             else {
