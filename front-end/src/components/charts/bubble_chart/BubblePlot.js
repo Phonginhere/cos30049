@@ -1,22 +1,13 @@
 import React, { useEffect, useRef, useState } from 'react';
 import * as d3 from 'd3';
 import WindowDimensions from '../../hook/Dimensions';
-import all_countries_data_processed from '../../ProcessedData/all_countries_data_processed.csv'
-import population from '../../ProcessedData/Polulation.csv';
-
+import all_countries_data_processed from '../../ProcessedData/all_countries_data_processed.csv';
+import Population from '../../ProcessedData/Population.csv';
+import country_continent from '../../ProcessedData/country_continent.csv';
 import '../chart_styles.css'
-
-d3.csv("../HomePage/Processed_Data/Life_expectancy.csv"),
-d3.csv("../HomePage/Processed_Data/GDP_processed.csv"),
-d3.csv("../HomePage/Processed_Data/country_continent.csv"),
-d3.csv("../HomePage/Processed_Data/Population.csv"),
-d3.csv("../HomePage/Processed_Data/Health_expenditure.csv")
-// import '../charts/chart_styles.css'; // Import your existing styles if any
 
 const BubblePlot = () => {
     const containerRef = useRef();
-    const {mouse_x, mouse_y} = MouseHandler();
-    const json = world;   
     const [tooltip, setTooltip] = useState({ visible: false, x: 0, y: 0, content: '' });
     var cfg = {
         w: window.innerWidth*0.4,
@@ -72,54 +63,52 @@ const BubblePlot = () => {
                 return [x, y]; 
             }
         }
+        // d3.select("#yAxis_option").on("change", function(d) {
+        //     // recover the option that has been chosen
+        //     var selectedOption = d3.select(this).property("value")
+        //     // run the updateChart function with this selected option
+        //     update_option_axis(update_x = null, update_y = selectedOption)
+        // })
+        // d3.select("#xAxis_option").on("change", function(d) {
+        //     // recover the option that has been chosen
+        //     var selectedOption = d3.select(this).property("value")
+        //     // run the updateChart function with this selected option
+        //     update_option_axis(update_x = selectedOption, update_y = null)
+        // })
 
-        function get_data_from_year(year){
+        const slider = document.getElementById('yearSlider');
+        const year = slider.value;  
+
+        // Get value from Year Slider
+        // slider.addEventListener('input', function() {
+        //     let year = slider.value;
+        //     get_data_from_year(year).then(function(data){
+        //         updatePlot(data,chart_year = year);
+        //     });
+        // });
+
+        // draw_chart(x_update = null, y_update = null);
+
+
+        function filterData(year, pollutant){
             return Promise.all([
-                d3.csv("../HomePage/Processed_Data/Life_expectancy.csv"),
-                d3.csv("../HomePage/Processed_Data/GDP_processed.csv"),
-                d3.csv("../HomePage/Processed_Data/country_continent.csv"),
-                d3.csv("../HomePage/Processed_Data/Population.csv"),
-                d3.csv("../HomePage/Processed_Data/Health_expenditure.csv")
-    
+                d3.csv(all_countries_data_processed),
+                d3.csv(country_continent),
+                d3.csv(Population),
             ]).then(function(data){
-                var lifeExpectancyData = data[0];
-                var gdpData = data[1];
-                var continentData = data[2];
-                var populationData = data[3];
-                var healthExpenditureData = data[4];
-    
-                var lifeExpectancy_in_year = lifeExpectancyData.filter(d => d.Year === year);
-                var gdp_in_year = gdpData.filter(d => d.Year === year);
-                var population_in_year = populationData.filter(d => d.Year === year);
-                var healthExpenditureData_in_year = healthExpenditureData.filter(d => d.Year === year);
-    
-                var mergedData = lifeExpectancy_in_year.map(d => {
-                    var gdpMatch = gdp_in_year.find(g => g.Country_code === d.Country_code);
-                    var continentMatch = continentData.find(c => c.Country_code === d.Country_code);
-                    var populationMatch = population_in_year.find(p => p.Country_code === d.Country_code);
-                    var healthExpenditureMatch = healthExpenditureData_in_year.find(p => p.Country_code === d.Country_code);
-                    return {
-                        country: d.Country,
-                        lifeExpectancy: +d.Life_expectancy,
-                        gdp: gdpMatch ? +gdpMatch.GDP : null,
-                        gdp_capita: gdpMatch ? +gdpMatch.GDP_capita : null,
-                        continent: continentMatch ? continentMatch.Continent : null,
-                        population: populationMatch ? populationMatch.Population : null,
-                        health_expenditure_gdp_share: healthExpenditureMatch ? healthExpenditureMatch.health_expenditure_gdp_share : null,
-                        health_expenditure: healthExpenditureMatch ? healthExpenditureMatch.health_expenditure : null,
-                        health_expenditure_capita: healthExpenditureMatch ? healthExpenditureMatch.health_expenditure_capita : null,
-                    };
-                }).filter(d => d.gdp_capita !== null);
-                // Extract columns from the merged data
-                var columns = Object.keys(mergedData[0]);
-                mergedData.columns = columns; // Add columns to mergedData for easier access
-                var filteredColumns = mergedData.columns.filter(function(column) {
-                    return column !== 'country' && column !== 'continent' && column !== 'population';
-                });
-                return mergedData;
+                var airQualityHealth = data[0];
+                var continentData = data[1];
+                var populationData = data[2];
+
+                
             });
         }
-    
+
+
+
+        function drawChart(){
+
+        }
 
 
 

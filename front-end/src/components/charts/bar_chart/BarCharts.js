@@ -1,6 +1,5 @@
 import React, { useEffect, useRef } from 'react';
 import * as d3 from 'd3';
-import WindowDimensions from '../../hook/Dimensions';
 import all_countries_data_processed from '../../ProcessedData/air_quality_health.csv';
 // import '../charts/chart_styles.css'; // Import your existing styles if any
 import '../chart_styles.css'
