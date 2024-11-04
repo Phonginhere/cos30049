@@ -1,16 +1,24 @@
+
+// Import necessary libraries and components
 import React, { useEffect, useRef, useState } from 'react';
 import * as d3 from 'd3';
 import WindowDimensions from '../../hook/Dimensions';
+import '../chart_styles.css'
+
+// Import necessary data for the visualisation
 import all_countries_data_processed from '../../ProcessedData/all_countries_data_processed.csv';
 import Population from '../../ProcessedData/Population.csv';
 import country_continent from '../../ProcessedData/country_continent.csv';
-import '../chart_styles.css'
 
 const BubblePlot = () => {
+    // Remove any existing SVG elements from previous renders
     d3.select("#plot").remove();
     d3.select("#barchart").remove();
+
+    // Reference to the container for the plot
     const containerRef = useRef();
-    const [tooltip, setTooltip] = useState({ visible: false, x: 0, y: 0, content: '' });
+
+    // Configuration for the plot dimensions and styling
     var cfg = {
         w: window.innerWidth*0.4,
         h: window.innerWidth*0.2,
@@ -21,22 +29,24 @@ const BubblePlot = () => {
         border: 1,
         fontSize: window.innerWidth*0.4/600 //rem
     };
+
+    // Color scale for continents
     var continentColor = d3.scaleOrdinal()
     .domain(["Asia", "Europe", "Americas", "Africa", "Oceania"])
     .range(d3.schemeSet1);
 
     
     useEffect(() => {
-        
+
+        // Create the plot HTML objects and axis options on component mount
         createPlotSection();
         createPlotAxisOption();
 
-        // Create container holding chart
+        // Create the SVG container for the plot
         var container = d3.select('#plot')
         .append("svg")
         .attr('id', 'plot-container')
         .attr("width", cfg.w+2*cfg.padding)
-        // .attr("height", cfg.h+1*cfg.padding);
         .attr("height", cfg.h);
 
         var svg;
@@ -69,19 +79,13 @@ const BubblePlot = () => {
             let y = y_option.value;
             if (update == true){
                 // updatePlot
-                console.log("UPDATE");
+                console.log("Update Plot");
             }
             else{
                 return [x,y]; 
             }
         }
 
-        // d3.select("#yAxis_option").on("change", function(d) {
-        //     // recover the option that has been chosen
-        //     var selectedOption = d3.select(this).property("value")
-        //     // run the updateChart function with this selected option
-        //     update_option_axis(x_update = null, y_update = selectedOption)
-        // })
         d3.select("#xAxis_option").on("change", function(d) {
             // recover the option that has been chosen
             var selectedOption = d3.select(this).property("value")
@@ -112,29 +116,73 @@ const BubblePlot = () => {
             drawChart(x_update = update_x, y_update = update_y, chart_year, pollutant = update_x);
         }
 
-        function filterData(year, pollutant){
-            return Promise.all([
-                d3.csv(all_countries_data_processed),
-                d3.csv(country_continent),
-                d3.csv(Population),
-            ]).then(function(data){
-                var airQualityHealth = data[0];
-                var continentData = data[1];
-                var populationData = data[2];
-                // var airQualityHealthFilter = airQualityHealth.filter(function(d) {
-                // return (d.Year === year && d.Pollutant === pollutant && d.Cause_Name !== 'All causes');
-                // })
-                var airQualityHealthFilter = airQualityHealth.filter(
-                    d => (d.Year === year && 
-                        d.Pollutant === pollutant 
-                        && 
-                        ((d['Cause Name'] === 'All causes'))
-                    ));
-                var population_in_year = populationData.filter(d => d.Year === year);
-                var mergedData = airQualityHealthFilter.map(d => {
-                    var continentMatch = continentData.find(c => c.Country_code === d.ISO3);
-                    var populationMatch = population_in_year.find(p => p.Country_code === d.ISO3);
-                    return{
+        // function filterData(year, pollutant){
+        //     return Promise.all([
+        //         d3.csv(all_countries_data_processed),
+        //         d3.csv(country_continent),
+        //         d3.csv(Population),
+        //     ]).then(function(data){
+        //         var airQualityHealth = data[0];
+        //         var continentData = data[1];
+        //         var populationData = data[2];
+        //         // var airQualityHealthFilter = airQualityHealth.filter(function(d) {
+        //         // return (d.Year === year && d.Pollutant === pollutant && d.Cause_Name !== 'All causes');
+        //         // })
+        //         var airQualityHealthFilter = airQualityHealth.filter(
+        //             d => (d.Year === year && 
+        //                 d.Pollutant === pollutant 
+        //                 && 
+        //                 ((d['Cause Name'] === 'All causes'))
+        //             ));
+        //         var population_in_year = populationData.filter(d => d.Year === year);
+        //         var mergedData = airQualityHealthFilter.map(d => {
+        //             var continentMatch = continentData.find(c => c.Country_code === d.ISO3);
+        //             var populationMatch = population_in_year.find(p => p.Country_code === d.ISO3);
+        //             return{
+        //                 countryCode: d.ISO3,
+        //                 country: d.Country,
+        //                 exposureMean: +d['Exposure Mean'],
+        //                 burdenMean: +d['Burden Mean'],
+        //                 pollutant: d.Pollutant,
+        //                 unit: d.Units,
+        //                 causeName: d['Cause Name'],
+        //                 population: populationMatch ? populationMatch.Population : null,
+        //                 continent: continentMatch ? continentMatch.Continent : null,
+        //             }
+        //         });
+        //         var columns = Object.keys(mergedData[0]);
+        //         mergedData.columns = columns; // Add columns to mergedData for easier access
+        //         console.log(mergedData);
+        //         return mergedData;
+                
+        //     });
+        // }
+
+
+        async function filterData(year, pollutant) {
+            try {
+                // Await all CSV data loading
+                const [airQualityHealth, continentData, populationData] = await Promise.all([
+                    d3.csv(all_countries_data_processed),
+                    d3.csv(country_continent),
+                    d3.csv(Population)
+                ]);
+        
+                // Filter air quality data based on the provided year and pollutant
+                const airQualityHealthFilter = airQualityHealth.filter(
+                    d => d.Year === year && 
+                         d.Pollutant === pollutant && 
+                         d['Cause Name'] === 'All causes'
+                );
+        
+                // Filter population data for the specified year
+                const population_in_year = populationData.filter(d => d.Year === year);
+        
+                // Merge data with continent and population data
+                const mergedData = airQualityHealthFilter.map(d => {
+                    const continentMatch = continentData.find(c => c.Country_code === d.ISO3);
+                    const populationMatch = population_in_year.find(p => p.Country_code === d.ISO3);
+                    return {
                         countryCode: d.ISO3,
                         country: d.Country,
                         exposureMean: +d['Exposure Mean'],
@@ -144,24 +192,26 @@ const BubblePlot = () => {
                         causeName: d['Cause Name'],
                         population: populationMatch ? populationMatch.Population : null,
                         continent: continentMatch ? continentMatch.Continent : null,
-                    }
+                    };
                 });
-                // console.log(mergedData);
-                var columns = Object.keys(mergedData[0]);
-                mergedData.columns = columns; // Add columns to mergedData for easier access
+        
+                // Add column names for easier access
+                mergedData.columns = Object.keys(mergedData[0]);
+                console.log(mergedData);
                 return mergedData;
-                
-            });
+        
+            } catch (error) {
+                console.error("Error filtering data:", error);
+                return []; // Return empty array in case of error
+            }
         }
-
+        
         function updatePlot(data,chart_year) {
             var xAxis_option;
             var yAxis_option;
             var axis_option = handleAxisChange();
             xAxis_option = axis_option[0];
             yAxis_option = axis_option[1];
-            // var xAxisData = get_data_by_axis(data,xAxis_option);
-            // var yAxisData = get_data_by_axis(data,yAxis_option);
     
             xScale
                 .domain([d3.min(data, d => {return d.exposureMean})-10, d3.max(data, d => {return d.exposureMean})+10])
@@ -204,25 +254,19 @@ const BubblePlot = () => {
 
         function drawChart(x_update, y_update, chart_year = "2020",pollutant = "pm25"){
             return filterData(chart_year,pollutant).then(function(data){
-                console.log(data);
                 var xAxis_option;
                 var yAxis_option;
                 if (x_update == null && y_update == null){
                     var axis_option = handleAxisChange();
                     xAxis_option = axis_option[0];
                     yAxis_option = axis_option[1];
-                    console.log(xAxis_option, yAxis_option);
                     var xAxisData = get_data_by_axis(data,xAxis_option);
-                    // var yAxisData = get_data_by_axis(data,yAxis_option);
                 }
                 else{
                     xAxis_option = x_update;
                     yAxis_option = y_update;
-                    console.log(xAxis_option, yAxis_option);
                     var xAxisData = get_data_by_axis(data,xAxis_option);
-                    // var yAxisData = get_data_by_axis(data,yAxis_option);
                 }
-                // console.log(xAxisData);
                 var mergedData = filter_null_data(data, [xAxis_option]);
 
                 population_scale 
@@ -401,26 +445,19 @@ const BubblePlot = () => {
                         .style("alignment-baseline", "middle")
                         .on("mouseover", highlight)
                         .on("mouseleave", noHighlight)
-
-                    console.log(mergedData);    
+ 
                     strokes.selectAll("circle")
                         .data(mergedData)
                         .enter()
                         .append("circle")
                         .attr("id", "stroke")
                         .attr("class", function(d) { return "bubbles " + d.continent })
-                        // .attr("cx", d => xScale(d[xAxis_option]))
-                        // .attr("cy", d => yScale(d[yAxis_option]))
-                        // .attr("cx", d => xScale(d.exposureMean))
-                        // .attr("cy", d => yScale(d.burdenMean))
                         .attr("cx", d => {
                             var cx = xScale(d.exposureMean);
-                            // console.log("cx for", d, ":", cx);
                             return cx;
                         })
                         .attr("cy", d => {
                             var cy = yScale(d.burdenMean);
-                            // console.log("cy for", d, ":", cy);
                             return cy;
                         })
                         .on("mouseover", handleMouseOver)
@@ -511,7 +548,8 @@ const BubblePlot = () => {
                 `<div><strong>Country:</strong> ${replaceNull(d.country)}<br>
                 <strong>Exposure of ${replaceNull(d.pollutant)}:</strong> ${replaceNull(d.exposureMean)} ${replaceNull(d.unit)}<br>
                 <strong>Cause: </strong> ${replaceNull(d.causeName)}<br>
-                <strong>Burden of DALYs: </strong> ${replaceNull(d.burdenMean)}<br>` : 
+                <strong>Burden of DALYs: </strong> ${replaceNull(d.burdenMean)}<br>
+                <strong>Population:</strong> ${replaceNull(d.population)} people<br> ` : 
                 `<div><strong>Country:</strong> ${d.country}</div>`;
             
             d3.select(this)

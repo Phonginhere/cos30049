@@ -1,18 +1,24 @@
-import React, { useEffect, useRef, useState } from 'react';
+
+// Import necessary libraries and components
+import React, { useEffect, useRef, useState } from 'react'; 
 import * as d3 from 'd3';
-import WindowDimensions from '../../hook/Dimensions';
-import all_countries_data_processed from '../../ProcessedData/all_countries_data_processed.csv'
-import world from './world.json'
-import MouseHandler from '../../mouse_move/MouseHandler';
 import '../chart_styles.css'
 
+// Import necessary data for the visualisation
+import all_countries_data_processed from '../../ProcessedData/all_countries_data_processed.csv'
+import world from './world.json'
 
-// import '../charts/chart_styles.css'; // Import your existing styles if any
+
 
 const Choropleth = () => {
+
+    // Reference to the container for the plot
     const containerRef = useRef();
+
+    // World map geoJSON data
     const json = world;   
-    const [tooltip, setTooltip] = useState({ visible: false, x: 0, y: 0, content: '' });
+
+    // Configuration for the plot dimensions and styling
     var cfg = {
         w: window.innerWidth*0.43,
         h: (window.innerWidth*0.43)*0.7,
@@ -25,23 +31,25 @@ const Choropleth = () => {
 
     
     useEffect(() => {
-        // d3.select(containerRef).select("choropleth-container").remove(); // Clear existing SVG before appending
         // Create or update the chart using D3.js
         function drawChoropleth(initial_data){
+            // Color scale for PM2.5 exposure levels
             const color = d3.scaleQuantize()
                     .range(['#eff3ff','#bdd7e7','#6baed6','#3182bd','#08519c'])
 
+            // Color legend scale
             const color_legend = d3.scaleQuantize()
                     .range(['#969696','#eff3ff','#bdd7e7','#6baed6','#3182bd','#08519c'])
 
+            // Map projection and path generator
             const projection = d3.geoMercator()
                     .center([0,55])
                     .translate([cfg.w/2,cfg.h/2])
                     .scale(cfg.w/7);
             const path = d3.geoPath()
                     .projection(projection);
-                    
-            console.log(containerRef.current)
+                
+            // Create the SVG container for the choropleth
             var container = d3.select(containerRef.current)
                     .append("svg")
                     .attr('id', 'choropleth-container')
@@ -49,6 +57,7 @@ const Choropleth = () => {
                     .attr("width", cfg.w)
                     .attr("height", cfg.h);
 
+            // Create the SVG container
             var svg = container
                     .append("svg")
                     .attr("id", "choropleth-svg")
@@ -56,15 +65,18 @@ const Choropleth = () => {
                     .attr("width", cfg.w)
                     .attr("height", cfg.h);
 
+            // Create legend group
             var legend = container.append("g")
                     .attr("class", "legend")
                     .attr("transform", "translate(" + (cfg.w/2) + "," + (cfg.h - cfg.padding/9) + ")");
             
-            var tooltip; 
-            drawChart();
+            var tooltip; // Tooltip container
+            drawChart(); // Initial chart draw
+
+            
             const slider = document.getElementById('yearSlider');
-            const year = slider.value;
-            // slider.addEventListener('input', function(event) {
+            // const year = slider.value;
+            // Add slider event for updating the chart based on year
             slider.addEventListener('change', function(event) {
 
                 let year = slider.value;
@@ -197,18 +209,12 @@ const Choropleth = () => {
                                 .duration(cfg.h)
                                 .style("opacity", 10);
                             d3.selectAll(".chart-tooltip").remove();
-                            setTooltip({ visible: false, x: 0, y: 0, content: '' });
                         }
 
                         function handlerMouseMove(event){
                             tooltip
                             .style("left", `${event.clientX + 10}px`)  // Position tooltip near cursor
                             .style("top", `${event.clientY - cfg.win_h*0.35}px`)
-                            // setTooltip(tooltip => ({
-                            //     ...tooltip,
-                            //     x: event.clientX + 10,
-                            //     y: event.clientY + 10
-                            // }));
                         }
                         
                         //Draw the geometry and set its color properties coresponding to the data

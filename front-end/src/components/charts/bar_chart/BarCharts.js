@@ -1,12 +1,21 @@
+
+// Import necessary libraries and components
 import React, { useEffect, useRef } from 'react';
 import * as d3 from 'd3';
+import '../chart_styles.css'    // Import your existing styles if any
+
+// Import necessary data for the visualisation
 import all_countries_data_processed from '../../ProcessedData/air_quality_health.csv';
-// import '../charts/chart_styles.css'; // Import your existing styles if any
-import '../chart_styles.css'
+
+
 const BarChart = () => {
+    // Remove any existing SVG elements from previous renders
     d3.select("#plot").remove();
     d3.select("#barchart").remove();
+
+    // Reference to the container for the plot
     const svgRef = useRef();
+
     // IBM Design Library Colors
     const ibmColors = [
         "#3ddbd9", // Teal 50
@@ -23,18 +32,7 @@ const BarChart = () => {
     const colorScale = d3.scaleOrdinal()
         .range(ibmColors);
 
-    const causeLabels = [
-        'Asthma',
-        'Ischemic heart disease',
-        'Chronic obstructive pulmonary disease',
-        'Tracheal, bronchus, and lung cancer',
-        'Ischemic stroke',
-        'Upper respiratory infections',
-        'Lower respiratory infections',
-        'Cataract'
-    ]
-
-    // Initialize the configuration of dimension
+    // Configuration for the plot dimensions and styling
     var cfg = {
         w: window.innerWidth*0.4,
         h: window.innerWidth*0.2,
@@ -47,21 +45,20 @@ const BarChart = () => {
 
     useEffect(() => {
         function draw_chart(init_data) {
-            // d3.select("#barchart").remove();
+
+            // Create the barchart HTML objects and axis options on component mount
             createBarSection();
             createPollutantOption();
 
             const xScale = d3.scaleBand();
             const yScale = d3.scaleLinear();
-            
-            // var container = d3.select(svgRef.current)
+
+            // Create the SVG container for the bar chart
             var container = d3.select('#barchart')
                                 .append('svg')
                                 .attr('id', 'barchart-container')
                                 .attr("width", cfg.w+2*cfg.padding)
                                 .attr("height", cfg.h+2*cfg.padding);
-            
-            console.log(svgRef.current);
 
             var svg;
     
@@ -118,9 +115,7 @@ const BarChart = () => {
                     // yScale.domain([0, d3.max(data, d => d.BurMean) * 1.2]);
                     var maxDomainYAxis = d3.max(data, function(d) {return d['Burden Mean'];});
                     yScale.domain([0, Math.ceil(maxDomainYAxis / 100) * 100+ maxDomainYAxis/5]);
-        
-                    // container.select(".x-axis").remove();
-                    // container.select(".y-axis").remove();
+
                     var xAxis = d3.axisBottom(xScale);
                     var yAxis = d3.axisLeft(yScale);
         
@@ -151,9 +146,6 @@ const BarChart = () => {
                         .attr("width", xScale.bandwidth() * 0.4)
                         .attr("height", function(d) { return cfg.h - yScale(d['Burden Mean']); })
                         .attr("fill", d => colorScale(d.Cause_Name))
-                        // 
-                        // .transition()
-                        // .duration(500)
         
                     bars.exit().remove();
 
@@ -186,12 +178,10 @@ const BarChart = () => {
                     //Configuring Y Scale
                     var maxDomainYAxis = d3.max(data, function(d) {return d['Burden Mean'];});
                     yScale
-                        // .range([cfg.h, 0])
                         // .domain([0, Math.ceil(maxDomainYAxis / 100) * 100+ maxDomainYAxis/5]);
                         .domain([0, maxDomainYAxis])
                         .range([cfg.h,0]);
 
-                    console.log("cfg.h: "+cfg.h);
                     svg = container 
                         .append("svg")
                         .attr('id', 'bar-svg')
@@ -202,7 +192,6 @@ const BarChart = () => {
 
                     var xAxis = svg.append("g")
                         .attr("class", "x-axis")
-                        // .attr("transform", "translate("+0+"," + (cfg.h - cfg.padding) + ")")
                         .attr("transform", `translate(0,${cfg.h - cfg.padding})`)
                         .transition().duration(700);
 
@@ -345,7 +334,6 @@ const BarChart = () => {
         }
         d3.csv(all_countries_data_processed).then(data => {
             data = data.filter(function(d) {return d.Cause_Name !== 'All causes'})
-            console.log("Data loaded:", data);
             draw_chart(data); // Call function to draw the chart
         }).catch(error => {
             console.error("Error loading data:", error);

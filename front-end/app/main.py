@@ -16,7 +16,7 @@ app.add_middleware(
 )
 
 # Load model and define endpoints
-model = joblib.load("app\\bmi_classifier.pkl")
+model = joblib.load("bmi_classifier.pkl")
 
 class BmiData(BaseModel):
     height: float
