@@ -36,6 +36,7 @@ const DrawAllCharts = () => {
             </div>
 
         </div>
+        
     );
 };
 
