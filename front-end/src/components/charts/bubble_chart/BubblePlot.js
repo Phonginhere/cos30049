@@ -15,6 +15,7 @@ const BubblePlot = () => {
         w: window.innerWidth*0.4,
         h: window.innerWidth*0.2,
         h2: (window.innerHeight*0.86),
+        win_h: window.screen.height,
         padding: window.innerWidth*0.04,
         radius: window.innerWidth*0.4*0.0066666,
         border: 1,
@@ -40,7 +41,7 @@ const BubblePlot = () => {
 
         var svg;
 
-        // Create a tooltip div
+        // Create a tooltip
         var tooltip;
     
         var population_scale = d3.scaleSqrt();
@@ -120,13 +121,15 @@ const BubblePlot = () => {
                 var airQualityHealth = data[0];
                 var continentData = data[1];
                 var populationData = data[2];
-
-                
                 // var airQualityHealthFilter = airQualityHealth.filter(function(d) {
                 // return (d.Year === year && d.Pollutant === pollutant && d.Cause_Name !== 'All causes');
                 // })
-                var airQualityHealthFilter = airQualityHealth.filter(d => (d.Year === year && d.Pollutant === pollutant && d['Cause Name'] === 'All causes'));
-                console.log(airQualityHealthFilter);
+                var airQualityHealthFilter = airQualityHealth.filter(
+                    d => (d.Year === year && 
+                        d.Pollutant === pollutant 
+                        && 
+                        ((d['Cause Name'] === 'All causes'))
+                    ));
                 var population_in_year = populationData.filter(d => d.Year === year);
                 var mergedData = airQualityHealthFilter.map(d => {
                     var continentMatch = continentData.find(c => c.Country_code === d.ISO3);
@@ -143,10 +146,7 @@ const BubblePlot = () => {
                         continent: continentMatch ? continentMatch.Continent : null,
                     }
                 });
-                
-                // return airQualityHealthFilter;
-                // return population_in_year;
-                // return continentData;
+                // console.log(mergedData);
                 var columns = Object.keys(mergedData[0]);
                 mergedData.columns = columns; // Add columns to mergedData for easier access
                 return mergedData;
@@ -175,8 +175,9 @@ const BubblePlot = () => {
     
             svg.select(".x-axis").transition().duration(300).call(xAxis);
             svg.select(".y-axis").transition().duration(300).call(yAxis);
-    
-            var circles = svg.selectAll("circle")
+            
+            var strokesContainer = d3.select('#strokes-container');
+            var circles = strokesContainer.selectAll("circle")
                 .data(data);
             
             circles.enter()
@@ -203,6 +204,7 @@ const BubblePlot = () => {
 
         function drawChart(x_update, y_update, chart_year = "2020",pollutant = "pm25"){
             return filterData(chart_year,pollutant).then(function(data){
+                console.log(data);
                 var xAxis_option;
                 var yAxis_option;
                 if (x_update == null && y_update == null){
@@ -225,7 +227,7 @@ const BubblePlot = () => {
 
                 population_scale 
                     .domain([d3.max(mergedData, d => d.population), d3.min(mergedData, d => d.population)])
-                    .range([ cfg.radius, cfg.radius*1.01]);
+                    .range([ cfg.radius*1.3, cfg.radius]);
                 
                 xScale
                     .domain([d3.min(xAxisData)-10, d3.max(xAxisData)+10])
@@ -313,22 +315,24 @@ const BubblePlot = () => {
                     .style("opacity", .05)
                     // expect the one that is hovered
                     d3.selectAll("."+d)
-                    .style("opacity", 1)
+                    .style("opacity", 0.9)
                     }
                 
                     // And when it is not hovered anymore
                 var noHighlight = function(event,d){
                     d3.selectAll(".bubbles")
-                    .style("opacity", 1)
+                    .style("opacity", 0.7)
                     }
         
                 var valuesToShow = [10000000, 100000000, 1000000000];
                 
                 container
-                .selectAll("legend")
+                // .selectAll("legend")
+                .selectAll(".legend-circle")
                 .data(valuesToShow)
                 .enter()
                 .append("circle")
+                    .attr("class", "legend-circle")
                     .attr("cx", cfg.w)
                     .attr("cy", function(d){ return cfg.h *2/3  - population_scale(d) } )
                     .attr("r", function(d){ return population_scale(d) })
@@ -336,10 +340,12 @@ const BubblePlot = () => {
                     .attr("stroke", "black");
                 
                 container
-                .selectAll("legend")
+                // .selectAll("legend")
+                .selectAll(".legend-line")
                 .data(valuesToShow)
                 .enter()
                 .append("line")
+                    .attr("class", "legend-line")
                     .attr('x1', function(d){ return cfg.w  + population_scale(d) } )
                     .attr('x2', function(d,i) { return cfg.w + cfg.padding*0.5 + cfg.padding*0.3*i})
                     .attr('y1', function(d){ return cfg.h *2/3  - population_scale(d) } )
@@ -349,7 +355,8 @@ const BubblePlot = () => {
         
                 //Legend label
                 container
-                    .selectAll("legend")
+                    // .selectAll("legend")
+                    .selectAll(".legend-text") // Unique selector for text labels
                     .data(valuesToShow)
                     .enter()
                     .append("text")
@@ -395,8 +402,6 @@ const BubblePlot = () => {
                         .on("mouseover", highlight)
                         .on("mouseleave", noHighlight)
 
-                    // const testData = { [xAxis_option]: 100 }; // Example data object
-                    // console.log(xScale(testData[xAxis_option]));
                     console.log(mergedData);    
                     strokes.selectAll("circle")
                         .data(mergedData)
@@ -409,22 +414,21 @@ const BubblePlot = () => {
                         // .attr("cx", d => xScale(d.exposureMean))
                         // .attr("cy", d => yScale(d.burdenMean))
                         .attr("cx", d => {
-                            // const cx = xScale(d[xAxis_option]);
-                            const cx = xScale(d.exposureMean);
+                            var cx = xScale(d.exposureMean);
                             // console.log("cx for", d, ":", cx);
                             return cx;
                         })
                         .attr("cy", d => {
-                            // const cy = yScale(d[yAxis_option]);
-                            const cy = yScale(d.burdenMean);
+                            var cy = yScale(d.burdenMean);
                             // console.log("cy for", d, ":", cy);
                             return cy;
                         })
                         .on("mouseover", handleMouseOver)
-                        .on("mouseout", handleMouseOut)
+                        .on("mousemove", handlerMouseMove)
+                        .on("mouseleave", handleMouseOut)
                         .transition().duration(700)
                         .attr("r", function(d) { return population_scale(d.population)})
-                        .style("fill", function (d) { return continentColor(d.continent); } )
+                        .style("fill", function (d) { return continentColor(d.continent); })
                         .attr("stroke", "black")
                         .attr("border", 1);
 
@@ -448,7 +452,7 @@ const BubblePlot = () => {
             // Adding label and select elements to the plot-option div for X Axis
             plotOptionDiv.append("label")
                 .attr("for", "xAxis_option")
-                .text("X Axis Option (Exposure to Pollutant type): ");
+                .text("Pollutant type: ");
         
             var xAxisSelect = plotOptionDiv.append("select")
                 .attr("id", "xAxis_option")
@@ -458,9 +462,10 @@ const BubblePlot = () => {
                 .attr("value", "pm25")
                 .text("Particulate Matter 2.5");
         
-            xAxisSelect.append("option")
-                .attr("value", "no2")
-                .text("Nitrogen Dioxide");
+            // No proper data for no2
+            // xAxisSelect.append("option")
+            //     .attr("value", "no2")
+            //     .text("Nitrogen Dioxide");
         
             xAxisSelect.append("option")
                 .attr("value", "ozone")
@@ -476,7 +481,7 @@ const BubblePlot = () => {
             // Adding label and select elements to the plot-option div for Y Axis
             plotOptionDiv.append("label")
                 .attr("for", "yAxis_option")
-                .text("Y Axis Option (Life Lost Rate): ");
+                .text("Measurement: ");
         
             var yAxisSelect = plotOptionDiv.append("select")
                 .attr("id", "yAxis_option")
@@ -489,38 +494,50 @@ const BubblePlot = () => {
         }
 
         function handleMouseOver(event, d) {
-
             tooltip = d3.select("#plot")
                 .append("div")
-                .attr("class", "chart-tooltip");
-            var tooltipContent = d.lifeExpectancy && d.gdp_capita ? 
+                .attr("class", "plot-tooltip")
+                .style("font-family","serif ")
+                .style("position", "absolute")
+                .style("background-color", "rgba(0, 0, 0, 0.75)")
+                .style("color", "white")
+                .style("padding", "6px 8px")
+                .style("border-radius", "4px")
+                .style("pointer-events", "none")
+                .style("position", "absolute")
+                .style("opacity", 0);  // Start hidden for smooth fade-in
+            var tooltipContent = d.exposureMean && d.burdenMean ? 
                 
                 `<div><strong>Country:</strong> ${replaceNull(d.country)}<br>
-                <strong>Life Expectancy:</strong> ${replaceNull(d.lifeExpectancy)} years<br>
-                <strong>GDP/Capita:</strong> ${replaceNull(d.gdp_capita)} $US<br>
-                <strong>GDP:</strong> ${replaceNull(d.gdp)} Billions $US<br>
-                <strong>Population:</strong> ${replaceNull(d.population)} people<br> 
-                <strong>Health Expenditure GDP shared:</strong> ${replaceNull(d.health_expenditure_gdp_share)}% <br> 
-                <strong>Health Expenditure:</strong> ${replaceNull(d.health_expenditure)} $US<br> 
-                <strong>Health Expenditure per Capita:</strong> ${replaceNull(d.health_expenditure_capita)} $US<br> </div>
-    
-    
-                <div style="font-size:60%"><strong>GDP</strong> & <strong>GDP/capita</strong> are conducted using <strong>Purchasing Power Parity (PPPs)</strong> in $US</div></div>` : 
-                
+                <strong>Exposure of ${replaceNull(d.pollutant)}:</strong> ${replaceNull(d.exposureMean)} ${replaceNull(d.unit)}<br>
+                <strong>Cause: </strong> ${replaceNull(d.causeName)}<br>
+                <strong>Burden of DALYs: </strong> ${replaceNull(d.burdenMean)}<br>` : 
                 `<div><strong>Country:</strong> ${d.country}</div>`;
-    
+            
+            d3.select(this)
+            .transition()
+            .duration(200)
+            .attr("r", function(d) { return population_scale(d.population)+2});
+
             tooltip.transition()
                 .duration(200)
-                .style("opacity", 1);
+                .style("opacity", 0.9);
             tooltip.html(tooltipContent)
-                .style("left", (event.pageX + cfg.padding/5) + "px")
-                // .style("top", (event.pageY - cfg.h*3+cfg.padding/2) + "px");
-                .style("top", (`${event.pageY- cfg.h2*1.6}px`));
-            d3.select(this)
-                // .attr("r", cfg.radius + 2);
-                .attr("r", function(d) { return population_scale(d.population)+2});
+                .style("left", `${event.clientX + 10} px`)
+                // .style("top", (`${ 1000} px`))
+                // .style("top", `${event.clientY - cfg.win_h*0.35}px`)
+                .style("top", `${event.clientY}px`)
+
+                .transition()
+                .duration(200)
+                .style("opacity", 0.9);
         }
-    
+
+        function handlerMouseMove(event){
+            tooltip
+            .style("left", `${event.clientX + 10}px`)  // Position tooltip near cursor
+            .style("top", `${event.clientY - cfg.win_h*0.35}px`)
+        }
         function handleMouseOut() {
             tooltip.transition()
                 .duration(500)
@@ -529,7 +546,7 @@ const BubblePlot = () => {
             d3.select(this)
                 // .attr("r", cfg.radius);
                 .attr("r", function(d) { return population_scale(d.population)});
-            d3.selectAll(".chart-tooltip").remove();
+            d3.selectAll(".plot-tooltip").remove();
         }
 
         function replaceNull(data){
@@ -602,21 +619,21 @@ const BubblePlot = () => {
                 title_y = "DALYs";
             }
 
-            return `${title_x} - ${title_y} in ${year}`;
+            return `Number of ${title_y} Attributable to  ${title_x} in ${year}`;
         }
 
         function axis_name(axis){
             if (axis == 'pm25') {
-                return "PM25";
+                return "PM25 (µg/m3)";
             }
             else if (axis == 'no2'){
-                return "NO2";
+                return "NO2 (µg/m3)";
             }
             else if (axis == 'ozone') {
-                return 'Ozone';
+                return 'Ozone (ppb)';
             }
             else if (axis == 'hap') {
-                return "HAP";
+                return "HAP (% of population)";
             }
             else if (axis == 'daly') {
                 return "DALYs";
@@ -628,22 +645,9 @@ const BubblePlot = () => {
 
 
 
-
-
-
-
-
-
-
-
-
     }, []); // Only run once on component mount
 
-    return (
-    <div> 
-
-    </div>
-    );
+    return (<div ref={containerRef}></div>);
 
 };
 

@@ -170,10 +170,10 @@ const BarChart = () => {
                 
                 
             };
-    
+
             // Create or update the chart using D3.js
             function draw_barchart(year, country_code, pollutant) {
-                console.log(year, country_code, pollutant);
+
                 return filter_data(year,country_code,pollutant).then(function(data){
                     //Configuring X Scale
                     xScale.range([cfg.padding, (cfg.w - cfg.padding)])
@@ -185,9 +185,13 @@ const BarChart = () => {
         
                     //Configuring Y Scale
                     var maxDomainYAxis = d3.max(data, function(d) {return d['Burden Mean'];});
-                    yScale.range([cfg.h, 0])
-                        .domain([0, Math.ceil(maxDomainYAxis / 100) * 100+ maxDomainYAxis/5]);
-                    
+                    yScale
+                        // .range([cfg.h, 0])
+                        // .domain([0, Math.ceil(maxDomainYAxis / 100) * 100+ maxDomainYAxis/5]);
+                        .domain([0, maxDomainYAxis])
+                        .range([cfg.h,0]);
+
+                    console.log("cfg.h: "+cfg.h);
                     svg = container 
                         .append("svg")
                         .attr('id', 'bar-svg')
@@ -198,19 +202,21 @@ const BarChart = () => {
 
                     var xAxis = svg.append("g")
                         .attr("class", "x-axis")
-                        .attr("transform", "translate("+0+"," + (cfg.h - cfg.padding) + ")")
+                        // .attr("transform", "translate("+0+"," + (cfg.h - cfg.padding) + ")")
+                        .attr("transform", `translate(0,${cfg.h - cfg.padding})`)
                         .transition().duration(700);
 
                     xAxis.call(d3.axisBottom(xScale))
                         .selectAll("text")
-                        .attr("transform", "translate(-10,10)rotate(-25)")
+                        .attr("transform", `translate(-10,10)rotate(-25)`)
                         .style("text-anchor", "end");
         
         
                     var yAxis = d3.axisLeft(yScale);
                     svg.append("g")
                         .attr("class", "y-axis")
-                        .attr("transform", "translate(" + cfg.padding + ","+ -cfg.padding+")")
+                        // .attr("transform", "translate(" + cfg.padding + ","+ -cfg.padding+")")
+                        .attr("transform", `translate(${cfg.padding},${-cfg.padding})`)
                         .transition().duration(700)
                         .call(yAxis);
         
@@ -243,7 +249,7 @@ const BarChart = () => {
                         .text(title_name(pollutant, data[0].Country, year));
         
         
-                    var barchart = svg.append("g")
+                    var bars = svg.append("g")
                         .selectAll("#bar-svg")
                         .data(data)
                         .enter()
@@ -251,7 +257,7 @@ const BarChart = () => {
                         .attr("x", function(d) { return xScale(d.Cause_Name) + xScale.bandwidth()*0.29; })
                         .attr("y", function(d) { return yScale(d["Burden Mean"]) - cfg.padding; })
                         .attr("width", xScale.bandwidth() * 0.4)
-                        .attr("height", function(d) { return cfg.h - yScale(d['Burden Mean']); })
+                        .attr("height", function(d) {console.log(`Burden Mean of ${d.Cause_Name}: ${d['Burden Mean']} \nBur height: ${cfg.h - yScale(d['Burden Mean'])})`); return  (cfg.h - yScale(d['Burden Mean'])); })
                         // .attr("fill", "#69b3a2");
                         .attr("fill", function (d) { return colorScale(d.Cause_Name); });
     
@@ -347,9 +353,8 @@ const BarChart = () => {
         
     }, []); // Only run once on component mount
 
-    // return <div id='barchart' ref={svgRef}></div>;
     return <div ref={svgRef}></div>;
-    // return <button id="chart-btn" onClick={() => ref={svgRef}}>Bar Chart</button>
+
 }; 
 
 

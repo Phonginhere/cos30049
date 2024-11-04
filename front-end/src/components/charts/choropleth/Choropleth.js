@@ -11,7 +11,6 @@ import '../chart_styles.css'
 
 const Choropleth = () => {
     const containerRef = useRef();
-    const {mouse_x, mouse_y} = MouseHandler();
     const json = world;   
     const [tooltip, setTooltip] = useState({ visible: false, x: 0, y: 0, content: '' });
     var cfg = {
@@ -159,7 +158,7 @@ const Choropleth = () => {
                             <div><strong>Country:</strong> ${d.properties.name}</div>\n
                             <div><strong>PM25:</strong> ${d.properties.value} µg/m3</div><br>
                             Click to see PM25 details for ${d.properties.name}.<br>
-                            (Distribution and Bar Chart)`;
+                            (Prediction and Bar Chart)`;
                             d3.selectAll(".Country")
                                 .transition()
                                 .duration(200)
@@ -175,15 +174,13 @@ const Choropleth = () => {
                                 .style("opacity", .9);
                             tooltip.html(tooltipContent)
                                 .style("left", `${event.clientX + 10}px`)  // Position tooltip near cursor
-                                .style("top", `${event.clientY + 10}px`)
+                                .style("top", `${event.clientY - 10}px`)
+                                // .style("top", `${event.clientY - cfg.win_h*0.35}px`)
                                 .transition()
                                 .duration(200)
                                 .style("opacity", 0.9);  // Fade in
-                            setTooltip({
-                                visible: true,
-                                x: event.clientX + 10,
-                                y: event.clientY + 10,
-                            });
+
+                            
                         };
 
                         function handlerMouseOut(event,d){
@@ -204,11 +201,14 @@ const Choropleth = () => {
                         }
 
                         function handlerMouseMove(event){
-                            setTooltip(tooltip => ({
-                                ...tooltip,
-                                x: event.clientX + 10,
-                                y: event.clientY + 10
-                            }));
+                            tooltip
+                            .style("left", `${event.clientX + 10}px`)  // Position tooltip near cursor
+                            .style("top", `${event.clientY - cfg.win_h*0.35}px`)
+                            // setTooltip(tooltip => ({
+                            //     ...tooltip,
+                            //     x: event.clientX + 10,
+                            //     y: event.clientY + 10
+                            // }));
                         }
                         
                         //Draw the geometry and set its color properties coresponding to the data
