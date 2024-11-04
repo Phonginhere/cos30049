@@ -33,6 +33,7 @@ const DrawAllCharts = () => {
                 <button id="chart-btn" onClick={handleBarChartClick}>Bar Chart</button>
                 {selectedChart === 'bubble' && <BubblePlot />}
                 {selectedChart === 'bar' && <BarChart />}
+                {/* User Input */}
             </div>
 
         </div>

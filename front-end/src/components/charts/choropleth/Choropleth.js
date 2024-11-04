@@ -191,8 +191,6 @@ const Choropleth = () => {
                                 .transition()
                                 .duration(200)
                                 .style("opacity", 0.9);  // Fade in
-
-                            
                         };
 
                         function handlerMouseOut(event,d){

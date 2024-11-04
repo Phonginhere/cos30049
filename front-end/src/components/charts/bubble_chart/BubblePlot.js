@@ -685,7 +685,12 @@ const BubblePlot = () => {
 
     }, []); // Only run once on component mount
 
-    return (<div ref={containerRef}></div>);
+    return (
+        <div>
+            <div ref={containerRef}></div>
+            {/* User Input form */}
+        </div>
+    );
 
 };
 
