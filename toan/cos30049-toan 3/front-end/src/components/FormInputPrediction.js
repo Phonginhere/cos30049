@@ -1,16 +1,27 @@
-// FormInputPrediction.js
-
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import 'bootstrap/dist/css/bootstrap.min.css';
-import './FormInputPrediction.css';
 
 const FormInputPrediction = ({ iso3 }) => {
-  // Removed: const [iso3, setIso3] = useState('');
   const [exposureMean, setExposureMean] = useState('');
   const [pollutant, setPollutant] = useState('');
+  const [pollutants, setPollutants] = useState([]);
   const [prediction, setPrediction] = useState(null);
   const [errors, setErrors] = useState([]);
   const [formErrors, setFormErrors] = useState({});
+
+  useEffect(() => {
+    const fetchPollutants = async () => {
+      try {
+        const response = await fetch('http://localhost:8002/pollutants');
+        const data = await response.json();
+        setPollutants(data.pollutants || []);
+      } catch (error) {
+        console.error('Error fetching pollutants:', error);
+      }
+    };
+
+    fetchPollutants();
+  }, []);
 
   const validateInputs = () => {
     const errors = {};
@@ -31,7 +42,7 @@ const FormInputPrediction = ({ iso3 }) => {
     }
 
     return errors;
-  }
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -44,7 +55,7 @@ const FormInputPrediction = ({ iso3 }) => {
     setErrors([]); // Reset errors
     setPrediction(null); // Reset prediction
     try {
-      const response = await fetch('http://localhost:8001/predict', {
+      const response = await fetch('http://localhost:8002/predict', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ iso3, exposure_mean: exposureMean, pollutant }),
@@ -64,18 +75,6 @@ const FormInputPrediction = ({ iso3 }) => {
   return (
     <div className="container mt-5">
       <form onSubmit={handleSubmit}>
-        {/* <div className="mb-3">
-          <label htmlFor="iso3" className="form-label">ISO3 Code</label>
-          <input
-            type="text"
-            className={`form-control ${formErrors.iso3 ? 'is-invalid' : ''}`}
-            id="iso3"
-            placeholder="ISO3 Code"
-            value={iso3}
-            onChange={(e) => setIso3(e.target.value)}
-          />
-          {formErrors.iso3 && <div className="invalid-feedback">{formErrors.iso3}</div>}
-        </div> */}
         <div className="mb-3">
           <label htmlFor="exposureMean" className="form-label">Exposure Mean</label>
           <input
@@ -90,14 +89,17 @@ const FormInputPrediction = ({ iso3 }) => {
         </div>
         <div className="mb-3">
           <label htmlFor="pollutant" className="form-label">Pollutant</label>
-          <input
-            type="text"
+          <select
             className={`form-control ${formErrors.pollutant ? 'is-invalid' : ''}`}
             id="pollutant"
-            placeholder="Pollutant"
             value={pollutant}
             onChange={(e) => setPollutant(e.target.value)}
-          />
+          >
+            <option value="">Select Pollutant</option>
+            {pollutants.map((pollutant, index) => (
+              <option key={index} value={pollutant.key}>{pollutant.display}</option>
+            ))}
+          </select>
           {formErrors.pollutant && <div className="invalid-feedback">{formErrors.pollutant}</div>}
         </div>
         <button type="submit" className="btn btn-primary">Predict</button>

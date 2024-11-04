@@ -97,13 +97,27 @@ def read_root():
 
     return data.head().to_dict(orient='records')
 
-# GET /countries endpoint
-# @app.post("/countries")
-# async def get_countries(iso3 : str):
-#     countries = read_countries_from_csv(CSV_FILE_PATH, iso3)
-#     if not countries:
-#         return JSONResponse(status_code=500, content={"detail": "Failed to load countries data."})
-#     return {"countries": countries}
+# GET /pollutants endpoint
+@app.get("/pollutants")
+def get_pollutants():
+    if not os.path.exists(CSV_FILE_PATH):
+        raise HTTPException(status_code=404, detail="Data file not found.")
+    
+    try:
+        data = pd.read_csv(CSV_FILE_PATH)
+    except pd.errors.ParserError as e:
+        raise HTTPException(status_code=500, detail=f"CSV Parsing Error: {str(e)}")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error reading data file: {str(e)}")
+    
+    pollutants = data['Pollutant'].unique().tolist()
+    pollutant_mapping = {
+        "no2": "Nitrogen Oxide (NO2)",
+        "pm25": "Particulate Matter 2.5 (PM)",
+        "hap": "Hazardous Air Pollutants (HAP)"
+    }
+    pollutants_with_display = [{"key": key, "display": pollutant_mapping.get(key, key)} for key in pollutants]
+    return {"pollutants": pollutants_with_display}
 
 def validate_data(input_data: ValidationInput):
     errors: List[str] = []
@@ -158,48 +172,58 @@ def validate_data(input_data: ValidationInput):
 # Prediction endpoint updated with ISO3
 def predict_burden(input_data: ValidationInput):
     dataset = pd.read_csv(CSV_FILE_PATH)
-    # Outlier removal for 'Exposure Mean'
-    Q1_exposure = dataset['Exposure Mean'].quantile(0.25)
-    Q3_exposure = dataset['Exposure Mean'].quantile(0.75)
-    IQR_exposure = Q3_exposure - Q1_exposure
-    lower_bound_exposure = Q1_exposure - 1.5 * IQR_exposure
-    upper_bound_exposure = Q3_exposure + 1.5 * IQR_exposure
 
-    # Outlier removal for 'Burden Mean'
-    Q1_burden = dataset['Burden Mean'].quantile(0.25)
-    Q3_burden = dataset['Burden Mean'].quantile(0.75)
-    IQR_burden = Q3_burden - Q1_burden
-    lower_bound_burden = Q1_burden - 1.5 * IQR_burden
-    upper_bound_burden = Q3_burden + 1.5 * IQR_burden
-
-    # Clean dataset by removing outliers
-    dataset_cleaned = dataset[
-        (dataset['Exposure Mean'] >= lower_bound_exposure) & 
-        (dataset['Exposure Mean'] <= upper_bound_exposure) & 
-        (dataset['Burden Mean'] >= lower_bound_burden) & 
-        (dataset['Burden Mean'] <= upper_bound_burden)
+    # Filter dataset based on country and pollutant first
+    filtered_df = dataset[
+        (dataset['ISO3'] == input_data.iso3) &
+        (dataset['Pollutant'] == input_data.pollutant)
     ]
 
-    # Filter dataset based on specific criteria
-    filtered_df = dataset_cleaned[
-        (dataset_cleaned['Cause_Name'] == 'All causes') &
-        (dataset_cleaned['ISO3'] == input_data.iso3) &
-        (dataset_cleaned['Pollutant'] == input_data.pollutant)
-    ]
-
+    # Check if there are any data points left after initial filtering
     if len(filtered_df) == 0:
-        # Raise HTTPException with structured detail
         raise HTTPException(
             status_code=400,
             detail={
                 "error": "NoDataFound",
                 "message": f"No data available for the specified criteria: ISO3={input_data.iso3}, Pollutant={input_data.pollutant}."
             }
-        ) 
+        )
+
+    # Outlier removal for 'Exposure Mean'
+    Q1_exposure = filtered_df['Exposure Mean'].quantile(0.25)
+    Q3_exposure = filtered_df['Exposure Mean'].quantile(0.75)
+    IQR_exposure = Q3_exposure - Q1_exposure
+    lower_bound_exposure = Q1_exposure - 1.5 * IQR_exposure
+    upper_bound_exposure = Q3_exposure + 1.5 * IQR_exposure
+
+    # Outlier removal for 'Burden Mean'
+    Q1_burden = filtered_df['Burden Mean'].quantile(0.25)
+    Q3_burden = filtered_df['Burden Mean'].quantile(0.75)
+    IQR_burden = Q3_burden - Q1_burden
+    lower_bound_burden = Q1_burden - 1.5 * IQR_burden
+    upper_bound_burden = Q3_burden + 1.5 * IQR_burden
+
+    # Clean dataset by removing outliers after initial filtering
+    dataset_cleaned = filtered_df[
+        (filtered_df['Exposure Mean'] >= lower_bound_exposure) & 
+        (filtered_df['Exposure Mean'] <= upper_bound_exposure) & 
+        (filtered_df['Burden Mean'] >= lower_bound_burden) & 
+        (filtered_df['Burden Mean'] <= upper_bound_burden)
+    ]
+
+    # Check if data is available after removing outliers
+    if len(dataset_cleaned) == 0:
+        raise HTTPException(
+            status_code=400,
+            detail={
+                "error": "NoDataFound",
+                "message": f"No data available after outlier removal for the specified criteria: ISO3={input_data.iso3}, Pollutant={input_data.pollutant}."
+            }
+        )
 
     # Feature and target variables
-    X = filtered_df[['Exposure Mean']].values
-    y = filtered_df['Burden Mean'].values
+    X = dataset_cleaned[['Exposure Mean']].values
+    y = dataset_cleaned['Burden Mean'].values
 
     # Scale features and target
     scaler_X = MinMaxScaler()
@@ -253,6 +277,9 @@ def predict_burden(input_data: ValidationInput):
     else:
         # If models are not significantly better, choose linear as default
         prediction = burden_prediction_rescaled_linear
+    
+    # Limiting floats to two decimal points
+    prediction = round(prediction, 2)
 
     return PredictionOutput(predicted_burden_mean=float(prediction))
 
@@ -260,6 +287,7 @@ def predict_burden(input_data: ValidationInput):
 async def predict(input_data: ValidationInput):
     validate_data(input_data)
     result = predict_burden(input_data)
+    # result_2 = round(result.predicted_burden_mean, 2)
     return {"prediction": result}
 
 # Exception handler for HTTPException

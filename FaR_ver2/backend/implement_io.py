@@ -65,8 +65,8 @@ def predict_burden_mean(iso3, pollutant, exposure_mean):
     return predicted_burden_mean
 
 # Example usage:
-iso3_input = 'VNM'  # Replace with actual ISO3 code
-pollutant_input = 'no2'  # Replace with actual pollutant
+iso3_input = 'RUS'  # Replace with actual ISO3 code
+pollutant_input = 'pm25'  # Replace with actual pollutant
 exposure_mean_input = 13.2  # Replace with actual exposure mean
 
 predicted_burden_mean = predict_burden_mean(iso3_input, pollutant_input, exposure_mean_input)

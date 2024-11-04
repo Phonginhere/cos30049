@@ -1,17 +1,5 @@
 /* choropleth_additional_styles.css */
 
-.country-form-overlay {
-    position: fixed; /* Changed to fixed to overlay the entire viewport */
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: rgba(0, 0, 0, 0.5);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 1000; /* Ensure the form appears above other elements */
-}
 
 .country-form-container {
     background: white;
