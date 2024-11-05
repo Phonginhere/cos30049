@@ -108,7 +108,7 @@ def clean_outliner(data, x, y, percentile: int = 0.25):
         (y >= lower_bound_y) & (y <= upper_bound_y)
     ]
 
-def train_linear_regression(X_train, y_train, polynomial:bool = False, poly_degrees:int = 4) -> LinearRegression:
+def train_regression(X_train, y_train, polynomial:bool = False, poly_degrees:int = 4) -> LinearRegression:
     """
     Train a Linear or Polynomial Regression model.
 
@@ -176,5 +176,25 @@ data = read_csv(file_path)
 
 data_country = filter_data(data,'USA','pm25')
 
+x, y, scaler_X, scaler_y = normalise_data(data_country[['Exposure Mean']], data_country['Burden Mean'])
 
+x_train, x_test, y_train, y_test = split_data(x, y)
+
+model = train_regression(x_train,y_train)
+
+mse,r2= evaluate_model(model, x_test, y_test)
+
+# Output the evaluation metrics
+# print(f"Mean Squared Error: {mse:.2f}")
+# print(f"R-squared: {r2:.2f}")
+
+
+
+class Regresstion():
+    def __init__(self, country_code, pollutant,file_path = '../datasets/all_countries_data_processed.csv'):
+        self.data = None
+        self.country_code = country_code
+        self.polutant = pollutant
+        self.file_path = file_path
+        
 
