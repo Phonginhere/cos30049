@@ -6,6 +6,7 @@ import Slider from './components/hook/Slider/Slider';
 import FormInputPrediction from './components/FormInputPrediction';
 import PredictionForm from './components/PredictionForm';
 import { Container, Box, Grid } from '@mui/material';
+import Footer from './components/Footer';
 
 function App() {
   return (
@@ -21,10 +22,14 @@ function App() {
       </div>
 
       {/* <div><FormInputPrediction /></div> */}
-      <div><PredictionForm/></div>
+      {/* <div><PredictionForm/></div> */}
 
       <div>
         <Slider />
+      </div>
+
+      <div>
+        <Footer/>
       </div>
 
     </div>

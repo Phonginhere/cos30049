@@ -12,13 +12,18 @@ import country_continent from '../../ProcessedData/country_continent.csv';
 import PredictionForm from '../../PredictionForm';
 import FormInputPrediction from '../../FormInputPrediction';
 
-const BubblePlot = () => {
+const BubblePlot = ({ predictionData }) => {
     // Remove any existing SVG elements from previous renders
+    // if (!predictionData)
+    // {
+    //     d3.select("#plot").remove();
+    // }
     d3.select("#plot").remove();
     d3.select("#barchart").remove();
 
     // Reference to the container for the plot
     const containerRef = useRef();
+    // const predictedData = predictionData
 
     // Configuration for the plot dimensions and styling
     var cfg = {
@@ -34,12 +39,11 @@ const BubblePlot = () => {
 
     // Color scale for continents
     var continentColor = d3.scaleOrdinal()
-    .domain(["Asia", "Europe", "Americas", "Africa", "Oceania"])
+    .domain(['Prediction',"Asia", "Europe", "Americas", "Africa", "Oceania", ])
     .range(d3.schemeSet1);
-
     
     useEffect(() => {
-
+        console.log('abc');
         // Create the plot HTML objects and axis options on component mount
         createPlotSection();
         createPlotAxisOption();
@@ -106,7 +110,10 @@ const BubblePlot = () => {
         });
 
         drawChart(x_update = null, y_update = null, chart_year = "2020",pollutant = 'pm25');
-
+        if(predictionData){
+            console.log(predictionData);
+            // drawChart(x_update = null, y_update = null, chart_year = "2020",pollutant = 'pm25');
+        }
         function update_option_axis(update_x, update_y){
             if (update_x === null){
                 update_x = x_option.value;
@@ -127,14 +134,28 @@ const BubblePlot = () => {
                     d3.csv(country_continent),
                     d3.csv(Population)
                 ]);
-        
+
                 // Filter air quality data based on the provided year and pollutant
                 const airQualityHealthFilter = airQualityHealth.filter(
                     d => d.Year === year && 
                          d.Pollutant === pollutant && 
                          d['Cause Name'] === 'All causes'
                 );
-        
+                let newData = null
+                if (predictionData){
+                    // console.log(predictionData);
+                    newData = {
+                        countryCode: predictionData.iso3,
+                        country: predictionData.iso3,
+                        exposureMean: predictionData.input_exposure_mean,
+                        burdenMean: predictionData.predicted_burden_mean,
+                        pollutant: predictionData.input_pollutant,
+                        unit: "µg/m3",
+                        causeName: "All causes",
+                        population: 100000000000000000000000,
+                        continent: 'Prediction'
+                    }
+                }
                 // Filter population data for the specified year
                 const population_in_year = populationData.filter(d => d.Year === year);
         
@@ -154,7 +175,9 @@ const BubblePlot = () => {
                         continent: continentMatch ? continentMatch.Continent : null,
                     };
                 });
-        
+                if (newData) {
+                    mergedData.push(newData);
+                  }
                 // Add column names for easier access
                 mergedData.columns = Object.keys(mergedData[0]);
                 return mergedData;
@@ -379,7 +402,7 @@ const BubblePlot = () => {
         
                 var size = cfg.radius*5;
         
-                var allgroups = ["Asia", "Europe", "Americas", "Africa", "Oceania"]
+                var allgroups = ["Asia", "Europe", "Americas", "Africa", "Oceania", "Prediction"]
                     container.selectAll("myrect")
                     .data(allgroups)
                     .enter()
@@ -475,7 +498,7 @@ const BubblePlot = () => {
         
             // Adding some spacing between the X Axis and Y Axis options
             plotOptionDiv.append("span")
-                .html("&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;");
+                .html("&nbsp;&nbsp;&nbsp;");
         
             // Adding label and select elements to the plot-option div for Y Axis
             plotOptionDiv.append("label")
@@ -640,18 +663,16 @@ const BubblePlot = () => {
         }
 
 
-
     }, []); // Only run once on component mount
 
     return (
         <div>
-            <div ref={containerRef}></div>
             
+            <div ref={containerRef}></div>
+            {/* <div ref = {useRef()}><PredictionForm /></div> */}
             {/* User Input form */}
             {/* <div ref = {useRef()}><FormInputPrediction /></div> */}
-            <div ref = {useRef()}><PredictionForm /></div>
-             
-            
+    
         </div>
     );
 
