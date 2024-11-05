@@ -1,21 +1,26 @@
-import React, { useEffect, useRef, useState } from 'react';
+
+// Import necessary libraries and components
+import React, { useEffect, useRef, useState } from 'react'; 
 import * as d3 from 'd3';
-import WindowDimensions from '../../hook/Dimensions';
+import '../chart_styles.css'
+
+// Import necessary data for the visualisation
 import all_countries_data_processed from '../../ProcessedData/all_countries_data_processed.csv'
 import world from './world.json'
-import MouseHandler from '../../mouse_move/MouseHandler';
-import '../chart_styles.css'
-import './choropleth_additional_styles.css';
-import FormInputPrediction from '../../FormInputPrediction';
+import InputForm from '../../InputForm';
+import FormInputPrediction from '../../FormInputPrediction'
 
 
-// import '../charts/chart_styles.css'; // Import your existing styles if any
 
 const Choropleth = () => {
+
+    // Reference to the container for the plot
     const containerRef = useRef();
-    const {mouse_x, mouse_y} = MouseHandler();
+
+    // World map geoJSON data
     const json = world;   
-    const [tooltip, setTooltip] = useState({ visible: false, x: 0, y: 0, content: '' });
+
+    // Configuration for the plot dimensions and styling
     var cfg = {
         w: window.innerWidth*0.43,
         h: (window.innerWidth*0.43)*0.7,
@@ -24,7 +29,7 @@ const Choropleth = () => {
         padding: window.innerWidth/13,
         fontSize: window.innerWidth*0.43/700
     };
-    // form input state
+
     const [formState, setFormState] = useState({
         visible: false,
         country: '',
@@ -34,23 +39,25 @@ const Choropleth = () => {
 
     
     useEffect(() => {
-        // d3.select(containerRef).select("choropleth-container").remove(); // Clear existing SVG before appending
         // Create or update the chart using D3.js
         function drawChoropleth(initial_data){
+            // Color scale for PM2.5 exposure levels
             const color = d3.scaleQuantize()
                     .range(['#eff3ff','#bdd7e7','#6baed6','#3182bd','#08519c'])
 
+            // Color legend scale
             const color_legend = d3.scaleQuantize()
                     .range(['#969696','#eff3ff','#bdd7e7','#6baed6','#3182bd','#08519c'])
 
+            // Map projection and path generator
             const projection = d3.geoMercator()
                     .center([0,55])
                     .translate([cfg.w/2,cfg.h/2])
                     .scale(cfg.w/7);
             const path = d3.geoPath()
                     .projection(projection);
-                    
-            console.log(containerRef.current)
+                
+            // Create the SVG container for the choropleth
             var container = d3.select(containerRef.current)
                     .append("svg")
                     .attr('id', 'choropleth-container')
@@ -58,6 +65,7 @@ const Choropleth = () => {
                     .attr("width", cfg.w)
                     .attr("height", cfg.h);
 
+            // Create the SVG container
             var svg = container
                     .append("svg")
                     .attr("id", "choropleth-svg")
@@ -65,15 +73,18 @@ const Choropleth = () => {
                     .attr("width", cfg.w)
                     .attr("height", cfg.h);
 
+            // Create legend group
             var legend = container.append("g")
                     .attr("class", "legend")
                     .attr("transform", "translate(" + (cfg.w/2) + "," + (cfg.h - cfg.padding/9) + ")");
             
-            var tooltip; 
-            drawChart();
+            var tooltip; // Tooltip container
+            drawChart(); // Initial chart draw
+
+            
             const slider = document.getElementById('yearSlider');
-            const year = slider.value;
-            // slider.addEventListener('input', function(event) {
+            // const year = slider.value;
+            // Add slider event for updating the chart based on year
             slider.addEventListener('change', function(event) {
 
                 let year = slider.value;
@@ -101,7 +112,6 @@ const Choropleth = () => {
                     .transition()
                     .duration(400)
                     .delay(100)
-
                     .style("fill", function(d){
                         var value = d.properties.value;
                         if (value) {
@@ -168,7 +178,7 @@ const Choropleth = () => {
                             <div><strong>Country:</strong> ${d.properties.name}</div>\n
                             <div><strong>PM25:</strong> ${d.properties.value} µg/m3</div><br>
                             Click to see PM25 details for ${d.properties.name}.<br>
-                            (Distribution and Bar Chart)`;
+                            (Prediction and Bar Chart)`;
                             d3.selectAll(".Country")
                                 .transition()
                                 .duration(200)
@@ -183,20 +193,16 @@ const Choropleth = () => {
                                 .duration(200)
                                 .style("opacity", .9);
                             tooltip.html(tooltipContent)
-                                .style("left", `${event.clientX - 150}px`)  // Position tooltip near cursor (updated to be more closer to cursor)
-                                .style("top", `${event.clientY - 350}px`)
+                                .style("left", `${event.clientX + 10}px`)  // Position tooltip near cursor
+                                .style("top", `${event.pageY}px`)
+                                // .style("top", `${event.clientY - cfg.win_h*0.35}px`)
                                 .transition()
                                 .duration(200)
                                 .style("opacity", 0.9);  // Fade in
-                            setTooltip({
-                                visible: true,
-                                x: event.clientX + 10,
-                                y: event.clientY + 10,
-                            });
                         };
 
                         function handlerMouseOut(event,d){
-                            
+                
                             d3.selectAll(".Country")
                                 .transition()
                                 .duration(200)
@@ -204,21 +210,17 @@ const Choropleth = () => {
                             d3.select(this)
                                 .transition()
                                 .duration(200)
-                                .style("stroke", "none") // Changed from "transparent" to "none"
-                                .style("stroke-width", 0); // Added to ensure stroke is removed
+                                .style("stroke", "transparent");
                             tooltip.transition()
                                 .duration(cfg.h)
                                 .style("opacity", 10);
                             d3.selectAll(".chart-tooltip").remove();
-                            setTooltip({ visible: false, x: 0, y: 0, content: '' });
                         }
 
                         function handlerMouseMove(event){
-                            setTooltip(tooltip => ({
-                                ...tooltip,
-                                x: event.clientX + 10,
-                                y: event.clientY + 10
-                            }));
+                            tooltip
+                            .style("left", `${event.clientX + 10}px`)  // Position tooltip near cursor
+                            .style("top", `${event.clientY - cfg.win_h*0.35}px`)
                         }
                         
                         //Draw the geometry and set its color properties coresponding to the data
@@ -227,7 +229,6 @@ const Choropleth = () => {
                             .enter()
                             .append("path")
                             .attr("d", path)
-                            .attr("class", "Country") // Assign a class for styling
                             .style("fill", function(d){
                                 var value = d.properties.value;
                                 if (value) {
@@ -251,12 +252,6 @@ const Choropleth = () => {
                                     module.exports = year;
                                     module.exports = slider;
                                 }
-                                setFormState({ // Show the form
-                                    visible: true,
-                                    country: country,
-                                    code: code,
-                                    year: year,
-                                });
                             });
                             ;
                             
@@ -321,44 +316,14 @@ const Choropleth = () => {
 
     }, []); // Only run once on component mount
 
-    // Handle form close, submit, and input change
-    const handleFormClose = () => {
-        setFormState({
-            visible: false,
-            country: '',
-            code: '',
-            year: '',
-        });
-    };
-
-    // const handleFormSubmit = (e) => {
-    //     e.preventDefault();
-    //     // Handle form submission logic here
-    //     const formData = new FormData(e.target);
-    //     const pm25 = formData.get('pm25');
-    //     const description = formData.get('description');
-    //     console.log("Form submitted:", { ...formState, pm25, description });
-    //     // You can add further processing here (e.g., sending data to a server)
-    //     // Close the form after submission
-    //     // handleFormClose();
-    // };
-
     return (
-        <>
-            <div id='choropleth' ref={containerRef} style={{ position: 'relative' }}>
-                {/* The choropleth map will be rendered here */}
-            </div>
-            {formState.visible && (
-                <div className="country-form-overlay">
-                    <div className="country-form-container">
-                        <button className="close-button" onClick={handleFormClose}>×</button>
-                        <h2>Details for {formState.country} #{formState.code}</h2>
-                       <FormInputPrediction country={formState.country} iso3={formState.code}/>
-                    </div>
-                </div>
-            )}
-        </>
+    <>
+        <div id = 'choropleth' ref={containerRef}> </div>
+    </>
+
+    
     );
+
 };
 
 export default Choropleth;

@@ -37,24 +37,20 @@
   }
 }
 
+/* App.css or index.css */
 
-/* Footer check begin */
-/* Make the app container a flexbox */
-.app-container {
-  display: flex;
-  flex-direction: column;
-  min-height: 100vh; /* Full viewport height */
+@media (max-width: 600px) {
+  h1 {
+    font-size: 1.5rem;
+  }
+
+  .charts {
+    padding: 0 8px;
+  }
+
+  .slider {
+    width: 90vw;
+    margin: 0 auto;
+  }
 }
 
-/* Make main content take up all available space */
-.content {
-  flex: 1;
-}
-
-/* Footer styling */
-footer {
-  background-color: #f8f9fa;
-  padding: 10px 0;
-  text-align: center;
-}
-/* Footer check end */
