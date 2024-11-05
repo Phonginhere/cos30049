@@ -28,6 +28,12 @@ const Choropleth = () => {
         fontSize: window.innerWidth*0.43/700
     };
 
+    const [formState, setFormState] = useState({
+        visible: false,
+        country: '',
+        code: '',
+        year: '',
+    });
 
     
     useEffect(() => {
@@ -309,9 +315,20 @@ const Choropleth = () => {
     }, []); // Only run once on component mount
 
     return (
-    <div id = 'choropleth' ref={containerRef}>
+    <>
+        <div id = 'choropleth' ref={containerRef}> </div>
+        {formState.visible && (
+            <div className="country-form-overlay">
+                <div className="country-form-container">
+                    <button className="close-button" onClick={handleFormClose}>×</button>
+                    <h2>Details for {formState.country} #{formState.code}</h2>
+                    <FormInputPrediction country={formState.country} iso3={formState.code}/>
+                </div>
+            </div>
+        )}
+    </>
 
-    </div>
+    
     );
 
 };
