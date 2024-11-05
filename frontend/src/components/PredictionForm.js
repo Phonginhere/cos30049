@@ -33,7 +33,16 @@ const PredictionForm = () => {
       const response = await axios.post('http://localhost:8000/predict', payload);
       setPrediction(response.data.predicted_burden_mean);
     } catch (error) {
-      setError("An error occurred while making the prediction. Please try again.");
+     if (error.response && error.response.data && error.response.data.detail) {
+            // If backend error message is provided, show it
+            setError(error.response.data.detail);
+        } else if (error.message) {
+            // General error message
+            setError(error.message);
+        } else {
+            setError("An unknown error occurred.");
+        }
+      // setError("An error occurred while making the prediction. Please try again.");
     }
   };
 
@@ -134,14 +143,14 @@ export default PredictionForm;
 //   const handleSubmit = async (e) => {
 //     e.preventDefault();
 //     setError(null);
-  
+
 //     // Adjust form data keys to match the backend expectations
 //     const payload = {
 //       iso3: formData.iso3.trim(),
 //       exposure_mean: parseFloat(formData.exposureMean), // Convert to float if needed
 //       pollutant: formData.pollutant.trim(),
 //     };
-  
+
 //     try {
 //       console.log(response.data.predicted_burden_mean);
 //       const response = await axios.post('http://localhost:8000/predict', payload);
@@ -150,7 +159,7 @@ export default PredictionForm;
 //       setError("An error occurred while making the prediction. Please try again.");
 //     }
 //   };
-  
+
 
 //   return (
 //     <Box component="form" onSubmit={handleSubmit} sx={{ maxWidth: 400, margin: '0 auto', padding: 2 }}>
