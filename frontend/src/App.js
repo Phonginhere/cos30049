@@ -34,35 +34,8 @@ function App() {
 
     return (
         <div>
-            <h1>BMI Predictor</h1>
-            <form onSubmit={handleSubmit}>
-                <label>
-                    Height (cm):
-                    <input
-                        type="number"
-                        value={height}
-                        onChange={(e) => setHeight(e.target.value)}
-                    />
-                </label>
-                <label>
-                    Weight (kg):
-                    <input
-                        type="number"
-                        value={weight}
-                        onChange={(e) => setWeight(e.target.value)}
-                    />
-                </label>
-                <button type="submit">Submit</button>
-            </form>
-            <div>
-                <h2>Prediction Result:</h2>
-                <p>{prediction ? prediction : "No result yet"}</p>
-            </div>
 
-            <div>
-                <h2>BMI Data Visualization</h2>
-                <BmiChart data={bmiData} />
-            </div>
+
             <div>
                 <DrawAllCharts/>
             </div>
