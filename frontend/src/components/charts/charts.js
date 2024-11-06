@@ -21,7 +21,7 @@ const DrawAllCharts = () => {
     const handleBubblePlotClick = () => {
         setSelectedChart('bubble');
     };
-
+        <PredictionForm setPredictionData={setPredictionData}/>
     const handleBarChartClick = () => {
         setSelectedChart('bar');
     };
