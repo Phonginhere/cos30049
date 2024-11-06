@@ -3,4 +3,5 @@ uvicorn
 pydantic
 requests
 sqlalchemy
-pandas
+pandas  
+scikit-learn  
