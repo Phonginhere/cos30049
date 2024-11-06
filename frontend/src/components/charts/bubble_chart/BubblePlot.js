@@ -36,13 +36,14 @@ const BubblePlot = ({ predictionData }) => {
         border: 1,
         fontSize: window.innerWidth*0.4/600 //rem
     };
-
+    console.log(predictionData);
     // Color scale for continents
     var continentColor = d3.scaleOrdinal()
     .domain(['Prediction',"Asia", "Europe", "Americas", "Africa", "Oceania", ])
     .range(d3.schemeSet1);
     
     useEffect(() => {
+        
         console.log('abc');
         // Create the plot HTML objects and axis options on component mount
         createPlotSection();
@@ -152,7 +153,7 @@ const BubblePlot = ({ predictionData }) => {
                         pollutant: predictionData.input_pollutant,
                         unit: "µg/m3",
                         causeName: "All causes",
-                        population: 1,
+                        population: 10,
                         continent: 'Prediction'
                     }
                 }

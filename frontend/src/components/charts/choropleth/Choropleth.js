@@ -177,8 +177,8 @@ const Choropleth = () => {
                             var tooltipContent = `
                             <div><strong>Country:</strong> ${d.properties.name}</div>\n
                             <div><strong>PM25:</strong> ${d.properties.value} µg/m3</div><br>
-                            Click to see PM25 details for ${d.properties.name}.<br>
-                            (Prediction and Bar Chart)`;
+                            <div style="font-size:80%"><strong>Click to see more details for ${d.properties.name} in Bar Chart.</strong></div>
+                            <div style="font-size:60%"><strong>Click to set country to Predict</strong></div>`;
                             d3.selectAll(".Country")
                                 .transition()
                                 .duration(200)
