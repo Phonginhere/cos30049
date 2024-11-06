@@ -16,7 +16,8 @@ const PredictionForm = ({ setPredictionData }) => {
   useEffect(() => {
     setPollutants([
       { key: 'pm25', display: 'Particulate Matter 2.5' },
-      { key: 'no2', display: 'Nitrogen Dioxide' },
+      { key: 'ozone', display: 'Ozone' },
+      // { key: 'no2', display: 'Nitrogen Dioxide' },
       { key: 'hap', display: 'Hazardous Air Pollutants' },
       // Add more pollutants as needed
     ]);

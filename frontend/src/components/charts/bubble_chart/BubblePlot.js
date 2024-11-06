@@ -10,7 +10,6 @@ import all_countries_data_processed from '../../ProcessedData/all_countries_data
 import Population from '../../ProcessedData/Population.csv';
 import country_continent from '../../ProcessedData/country_continent.csv';
 import PredictionForm from '../../PredictionForm';
-import FormInputPrediction from '../../FormInputPrediction';
 
 const BubblePlot = ({ predictionData }) => {
     // Remove any existing SVG elements from previous renders
@@ -34,7 +33,7 @@ const BubblePlot = ({ predictionData }) => {
         padding: window.innerWidth*0.04,
         radius: window.innerWidth*0.4*0.0066666,
         border: 1,
-        fontSize: window.innerWidth*0.4/600 //rem
+        fontSize: window.innerWidth*0.43/700 //rem
     };
     console.log(predictionData);
     // Color scale for continents

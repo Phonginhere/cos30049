@@ -3,7 +3,6 @@ import Choropleth from './choropleth/Choropleth';
 import BarChart from './bar_chart/BarCharts';
 import BubblePlot from './bubble_chart/BubblePlot';
 import PredictionForm from '../PredictionForm';
-import FormInputPredition from '../FormInputPrediction'
 import './chart_styles.css';
 
 const DrawAllCharts = () => {
@@ -30,7 +29,6 @@ const DrawAllCharts = () => {
         <div>
             <div>
                 <PredictionForm setPredictionData={setPredictionData}/>
-                {/* <FormInputPredition/> */}
             </div>
 
             <div className="charts">

@@ -1,0 +1,32 @@
+# Setup to recreate the project
+
+    conda create -n cos30049 python==3.12.4
+
+    ## Backend
+        pip install fastapi
+	pip install uvicorn
+	pip install request
+        pip install pydantic
+	pip install sqlalchemy
+        pip install pandas
+        pip install scikit-learn==1.5.2
+        pip install "fastapi[standard]"
+
+        ### Start
+            uvicorn main:app --reload
+
+    
+    ## Frontend
+        cd frontend
+        npx create-react-app .
+        npm install axios
+        npm install @mui/material @emotion/react @emotion/styled @mui/icons-material
+        npm install react-router-dom
+        npm install d3
+
+        ### Start
+            npm start
+
+
+
+

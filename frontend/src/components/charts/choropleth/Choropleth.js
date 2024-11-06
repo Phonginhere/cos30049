@@ -7,8 +7,7 @@ import '../chart_styles.css'
 // Import necessary data for the visualisation
 import all_countries_data_processed from '../../ProcessedData/all_countries_data_processed.csv'
 import world from './world.json'
-import InputForm from '../../InputForm';
-import FormInputPrediction from '../../FormInputPrediction'
+
 
 
 
