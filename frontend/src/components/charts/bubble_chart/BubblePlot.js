@@ -14,11 +14,11 @@ import FormInputPrediction from '../../FormInputPrediction';
 
 const BubblePlot = ({ predictionData }) => {
     // Remove any existing SVG elements from previous renders
-    // if (!predictionData)
-    // {
-    //     d3.select("#plot").remove();
-    // }
-    d3.select("#plot").remove();
+    if (!predictionData)
+    {
+        d3.select("#plot").remove();
+    }
+    // d3.select("#plot").remove();
     d3.select("#barchart").remove();
 
     // Reference to the container for the plot
@@ -152,7 +152,7 @@ const BubblePlot = ({ predictionData }) => {
                         pollutant: predictionData.input_pollutant,
                         unit: "µg/m3",
                         causeName: "All causes",
-                        population: 100000000000000000000000,
+                        population: 1,
                         continent: 'Prediction'
                     }
                 }
