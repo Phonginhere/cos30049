@@ -28,7 +28,10 @@ const DrawAllCharts = () => {
 
     return (
         <div>
-
+            <div>
+                <PredictionForm setPredictionData={setPredictionData}/>
+                {/* <FormInputPredition/> */}
+            </div>
 
             <div className="charts">
             {/* Display Choropleth chart by default */}
@@ -41,12 +44,8 @@ const DrawAllCharts = () => {
                     {selectedChart === 'bubble' && <BubblePlot predictionData={predictionData}/>}
                     {selectedChart === 'bar' && <BarChart />}
                 </div>
-                <div>
-                <PredictionForm setPredictionData={setPredictionData}/>
-                {/* <PredictionForm/> */}
-                {/* <FormInputPredition/> */}
-                </div>
-                {/* User Input */}
+                
+
                 
             </div>
         </div>
