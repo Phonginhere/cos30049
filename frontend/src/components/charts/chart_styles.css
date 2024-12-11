@@ -29,9 +29,6 @@
 #plot, 
 #density, 
 #barchart{
-/* #choropleth,
-#plot-container, 
-#density-container { */
     border: 1px solid #ccc;
     margin-bottom: 20px; /* Add some margin between the charts */
     padding: 10px; /* Add some padding inside the border */
@@ -73,7 +70,7 @@
     stroke-width: 1.5;
 }
 
-.chart-tooltip {
+/* .chart-tooltip {
     position: absolute;
     text-align: center;
     width: auto;
@@ -85,7 +82,7 @@
     border: 1px solid black;
     border-radius: 8px;
     pointer-events: none;
-}
+} */
 
 /* Style the circles */
 circle {

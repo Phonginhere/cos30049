@@ -1,5 +1,8 @@
 fastapi
 uvicorn
-pandas
-scikit-learn
+request
 pydantic
+requests
+sqlalchemy
+pandas  
+scikit-learn==1.5.2
