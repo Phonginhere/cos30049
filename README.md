@@ -1,4 +1,4 @@
-# GIF demonstrate for more, go to [Air Quality and Health](#air-quality-and-health)
+# GIF demonstrate below, for details, go to [Air Quality and Health](#air-quality-and-health)
 ![bar_gif](https://github.com/user-attachments/assets/ef28b035-962b-4aac-a7ac-227c15ceefc9)
 ![chart](https://github.com/user-attachments/assets/db9a6066-d394-4c45-8f6d-d86ab3766fa1)
 ![hovering](https://github.com/user-attachments/assets/524cce5d-8b1c-476b-9d85-cd0c23cfc1fb)
