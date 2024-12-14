@@ -1,8 +1,5 @@
-![bar_gif](https://github.com/user-attachments/assets/ef28b035-962b-4aac-a7ac-227c15ceefc9)
-![chart](https://github.com/user-attachments/assets/db9a6066-d394-4c45-8f6d-d86ab3766fa1)
-![hovering](https://github.com/user-attachments/assets/524cce5d-8b1c-476b-9d85-cd0c23cfc1fb)
-![map](https://github.com/user-attachments/assets/fa4f8784-5c9b-40e9-9e87-40a9c3001404)
-![input](https://github.com/user-attachments/assets/36000ad5-230f-4faf-a000-7a66a5b66566)
+# GIF and Image Responsive image demonstrate [Here](https://github.com/Phonginhere/cos30049/wiki/Demonstrate#gif-demonstration)
+
 
 # Air quality and Health
 This project is to help people shows on predict the exposure mean to get the Predicted Health Burden mean in country and name of the pollutant result with more insights on Data Visualisation such as Choropleth with Bar and Bubble chart. 
