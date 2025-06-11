@@ -14,6 +14,7 @@ function App() {
       <div className="App">
         <h1>Air Quality Health Dashboard</h1>
         {/* Auto-deployment test - updated for Hugging Face Spaces */}
+        {/* Deployment successful - Live on HF Spaces! */}
       </div>
 
       <div>
