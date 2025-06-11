@@ -75,11 +75,10 @@ const BarChart = () => {
             const pollutant = pollutant_option.value;   //Default pollutant from option
     
             document.addEventListener('countryClick', function(event) {
-                let { year, code, country } = event.detail;
+                let { code } = event.detail; // Only destructure what we use
                 lastClickedCountry = code;  // Update the last clicked country
                 pollutant_change = pollutant_option.value;
                 year_slider = slider.value;
-                country = lastClickedCountry;
                 update_chart(year_slider, lastClickedCountry, pollutant_change);
             });
             
@@ -238,7 +237,7 @@ const BarChart = () => {
                         .text(title_name(pollutant, data[0].Country, year));
         
         
-                    var bars = svg.append("g")
+                    svg.append("g")
                         .selectAll("#bar-svg")
                         .data(data)
                         .enter()

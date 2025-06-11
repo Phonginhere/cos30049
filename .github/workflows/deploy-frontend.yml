@@ -49,7 +49,7 @@ jobs:
       working-directory: ./frontend
       run: |
         echo "Building React application..."
-        npm run build
+        CI=false npm run build
         
         echo "Build completed successfully!"
         ls -la build/

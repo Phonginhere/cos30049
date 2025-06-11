@@ -1,15 +1,15 @@
 
 // Import necessary libraries and components
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef } from 'react';
 import * as d3 from 'd3';
-import WindowDimensions from '../../hook/Dimensions';
+// import WindowDimensions from '../../hook/Dimensions';
 import '../chart_styles.css'
 
 // Import necessary data for the visualisation
 import all_countries_data_processed from '../../ProcessedData/all_countries_data_processed.csv';
 import Population from '../../ProcessedData/Population.csv';
 import country_continent from '../../ProcessedData/country_continent.csv';
-import PredictionForm from '../../PredictionForm';
+// import PredictionForm from '../../PredictionForm';
 
 const BubblePlot = ({ predictionData }) => {
     // Remove any existing SVG elements from previous renders
@@ -73,17 +73,17 @@ const BubblePlot = ({ predictionData }) => {
 
 
         const slider = document.getElementById('yearSlider');
-        const year = slider.value;  
+        // const year = slider.value;  // Commented out unused variable
 
         var pollutant;
-        var x_update;
-        var y_update;
+        // var x_update; // Commented out unused variables
+        // var y_update;
         var chart_year;
 
         function handleAxisChange(update = false) {
             let x = x_option.value;
             let y = y_option.value;
-            if (update == true){
+            if (update === true){
                 // updatePlot
                 console.log("Update Plot");
             }
@@ -96,7 +96,7 @@ const BubblePlot = ({ predictionData }) => {
             // recover the option that has been chosen
             var selectedOption = d3.select(this).property("value")
             // run the updateChart function with this selected option
-            update_option_axis(x_update = selectedOption, y_update = null)
+            update_option_axis(selectedOption, null)
         })
 
 
@@ -105,14 +105,14 @@ const BubblePlot = ({ predictionData }) => {
         slider.addEventListener('input', function() {
             let year = slider.value;
             return filterData(year, pollutant).then(function(data){
-                updatePlot(data,chart_year = year);
+                updatePlot(data, year);
             });
         });
 
-        drawChart(x_update = null, y_update = null, chart_year = "2020",pollutant = 'pm25');
+        drawChart(null, null, "2020", 'pm25');
         if(predictionData){
             console.log(predictionData);
-            // drawChart(x_update = null, y_update = null, chart_year = "2020",pollutant = 'pm25');
+            // drawChart(null, null, "2020", 'pm25');
         }
         function update_option_axis(update_x, update_y){
             if (update_x === null){
@@ -122,7 +122,7 @@ const BubblePlot = ({ predictionData }) => {
                 update_y = y_option.value;
             }
             d3.select("#plot-svg").remove();
-            drawChart(x_update = update_x, y_update = update_y, chart_year, pollutant = update_x);
+            drawChart(update_x, update_y, chart_year, update_x);
         }
 
 

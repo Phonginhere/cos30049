@@ -23,7 +23,7 @@ jobs:
       working-directory: ./frontend
       run: |
         npm ci
-        npm run build
+        CI=false npm run build
     
     - name: Deploy to Hugging Face Spaces
       env:

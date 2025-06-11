@@ -1,6 +1,6 @@
 
 // Import necessary libraries and components
-import React, { useEffect, useRef, useState } from 'react'; 
+import React, { useEffect, useRef } from 'react';
 import * as d3 from 'd3';
 import '../chart_styles.css'
 
@@ -29,12 +29,12 @@ const Choropleth = () => {
         fontSize: window.innerWidth*0.43/700
     };
 
-    const [formState, setFormState] = useState({
-        visible: false,
-        country: '',
-        code: '',
-        year: '',
-    });
+    // const [formState, setFormState] = useState({
+    //     visible: false,
+    //     country: '',
+    //     code: '',
+    //     year: '',
+    // });
 
     
     useEffect(() => {
