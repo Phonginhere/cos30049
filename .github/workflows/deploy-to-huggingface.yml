@@ -1,0 +1,142 @@
+name: Deploy to Hugging Face Spaces
+
+on:
+  push:
+    branches: [ main, master ]
+    paths:
+      - 'frontend/**'
+  pull_request:
+    branches: [ main, master ]
+    paths:
+      - 'frontend/**'
+  workflow_dispatch: # Allow manual trigger
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+        lfs: true
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+        cache-dependency-path: frontend/package-lock.json
+    
+    - name: Install frontend dependencies
+      working-directory: ./frontend
+      run: npm ci
+    
+    - name: Build frontend
+      working-directory: ./frontend
+      run: npm run build
+    
+    - name: Prepare Hugging Face Space structure
+      run: |
+        # Create a temporary directory for HF Space
+        mkdir -p hf-space
+        
+        # Copy the built React app
+        cp -r frontend/build/* hf-space/
+        
+        # Create/update the README.md with HF Space metadata
+        cat > hf-space/README.md << 'EOF'
+        ---
+        title: Air Quality Health
+        emoji: 🌍
+        colorFrom: blue
+        colorTo: green
+        sdk: static
+        pinned: false
+        license: mit
+        short_description: Air Quality and Health Visualization Dashboard
+        ---
+        
+        # Air Quality Health Dashboard
+        
+        This is an interactive dashboard for visualizing air quality data and its impact on health.
+        
+        ## Features
+        
+        - Interactive charts and visualizations
+        - Country-wise air quality data
+        - Health impact predictions
+        - Responsive design
+        
+        ## Tech Stack
+        
+        - Frontend: React.js with D3.js for visualizations
+        - UI Framework: Material-UI (MUI)
+        - Data Visualization: D3.js
+        
+        ## Team: Safety Windy
+        
+        - Phong Tran (104334842)
+        - Khanh Toan Nguyen (104180605) 
+        - Mai An Nguyen (103824070)
+        
+        COS30049 Computing Technology Innovation Project - Swinburne University of Technology
+        EOF
+        
+        # Create package.json for HF Space
+        cat > hf-space/package.json << 'EOF'
+        {
+          "name": "air-quality-health-dashboard",
+          "version": "1.0.0",
+          "description": "Air Quality and Health Visualization Dashboard",
+          "main": "index.html",
+          "scripts": {
+            "start": "npx serve -s . -l 7860",
+            "build": "echo 'Build completed'"
+          },
+          "keywords": ["air-quality", "health", "visualization", "dashboard"],
+          "author": "Safety Windy Team",
+          "license": "MIT"
+        }
+        EOF
+    
+    - name: Setup Git for Hugging Face
+      run: |
+        git config --global user.email "actions@github.com"
+        git config --global user.name "GitHub Actions"
+    
+    - name: Clone Hugging Face Space repository
+      env:
+        HF_TOKEN: ${{ secrets.HF_TOKEN }}
+      run: |
+        git clone https://huggingface.co/spaces/cos30049-safetywindy/air_quality_health hf-repo
+    
+    - name: Update Hugging Face Space
+      run: |
+        # Remove old files except .git and .gitattributes
+        cd hf-repo
+        find . -type f ! -path './.git/*' ! -name '.gitattributes' ! -name '.gitignore' -delete
+        find . -type d -empty -delete 2>/dev/null || true
+        
+        # Copy new files
+        cp -r ../hf-space/* .
+        
+        # Add all changes
+        git add .
+        
+        # Check if there are changes to commit
+        if git diff --staged --quiet; then
+          echo "No changes to deploy"
+        else
+          git commit -m "🚀 Auto-deploy from GitHub Actions - $(date '+%Y-%m-%d %H:%M:%S')"
+          git push
+        fi
+      env:
+        HF_TOKEN: ${{ secrets.HF_TOKEN }}
+    
+    - name: Deployment Summary
+      run: |
+        echo "🎉 Deployment completed successfully!"
+        echo "📝 Your app should be available at: https://huggingface.co/spaces/cos30049-safetywindy/air_quality_health"
+        echo "⏰ Deployment time: $(date)"

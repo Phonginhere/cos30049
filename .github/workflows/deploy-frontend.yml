@@ -1,0 +1,289 @@
+name: Deploy Frontend to Hugging Face
+
+# Trigger deployment on pushes to main/master or manual trigger
+on:
+  push:
+    branches: [main, master]
+    paths:
+      - 'frontend/**'
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Deployment environment'
+        required: true
+        default: 'production'
+        type: choice
+        options:
+        - production
+        - staging
+
+env:
+  NODE_VERSION: '18'
+  HF_SPACE: 'cos30049-safetywindy/air_quality_health'
+
+jobs:
+  deploy:
+    name: 🚀 Deploy to Hugging Face Spaces
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: 📦 Checkout Repository
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+    
+    - name: 🟢 Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+        cache: 'npm'
+        cache-dependency-path: 'frontend/package-lock.json'
+    
+    - name: 📥 Install Dependencies
+      working-directory: ./frontend
+      run: |
+        echo "Installing dependencies..."
+        npm ci --only=production
+    
+    - name: 🔨 Build Application
+      working-directory: ./frontend
+      run: |
+        echo "Building React application..."
+        npm run build
+        
+        echo "Build completed successfully!"
+        ls -la build/
+    
+    - name: 📋 Prepare Hugging Face Space
+      run: |
+        echo "Preparing deployment files..."
+        
+        # Create deployment directory
+        mkdir -p deploy
+        
+        # Copy built React app
+        cp -r frontend/build/* deploy/
+        
+        # Generate README.md with proper frontmatter for HF Spaces
+        cat > deploy/README.md << 'EOF'
+        ---
+        title: Air Quality Health Dashboard
+        emoji: 🌍
+        colorFrom: blue
+        colorTo: green
+        sdk: static
+        pinned: false
+        license: mit
+        short_description: Air Quality and Health Visualization Dashboard - COS30049 Project
+        ---
+        
+        # 🌍 Air Quality Health Dashboard
+        
+        An interactive web application for visualizing air quality data and its impact on health across different countries and time periods.
+        
+        ## ✨ Features
+        
+        - 📊 **Interactive Visualizations**: D3.js powered charts including choropleth maps, bubble charts, and bar charts
+        - 🗺️ **Global Coverage**: Air quality data from countries worldwide (1990-2021)
+        - 🎛️ **Time Controls**: Interactive sliders for temporal data exploration
+        - 📱 **Responsive Design**: Works seamlessly on desktop and mobile devices
+        - 🔍 **Data Insights**: Explore relationships between air quality and health outcomes
+        
+        ## 🛠️ Technology Stack
+        
+        - **Frontend Framework**: React.js with modern hooks
+        - **Data Visualization**: D3.js for interactive charts and maps
+        - **UI Components**: Material-UI (MUI) for polished interface
+        - **Styling**: Custom CSS with Bootstrap utilities
+        - **Build Tool**: Create React App with optimization
+        
+        ## 📊 Data Sources
+        
+        This application uses data from reputable sources:
+        - **State of Global Air** (Health Effects Institute)
+        - **Institute for Health Metrics and Evaluation (IHME)**
+        - **University of British Columbia** research contributions
+        
+        Data covers air pollutants including:
+        - Ozone (O₃)
+        - Nitrogen Dioxide (NO₂)
+        - Ambient Particulate Matter (PM2.5)
+        - Hazardous Air Pollutants from solid fuels
+        
+        ## 👥 Team: Safety Windy
+        
+        This project was developed by Swinburne University of Technology students:
+        
+        - **Phong Tran** (104334842) - Bachelor of Computer Science (Artificial Intelligence)
+        - **Khanh Toan Nguyen** (104180605) - Bachelor of Computer Science (Artificial Intelligence)
+        - **Mai An Nguyen** (103824070) - Bachelor of Computer Science (Data Science)
+        
+        ## 🎓 Academic Context
+        
+        **COS30049 Computing Technology Innovation Project**  
+        Swinburne University of Technology  
+        Faculty of Science, Engineering and Technology
+        
+        ## 🚀 Getting Started
+        
+        Simply interact with the dashboard using the navigation menu. The application loads automatically with sample data and provides intuitive controls for data exploration.
+        
+        ### Navigation
+        - **Home**: Project overview and team information
+        - **Graph**: Interactive visualizations and charts
+        
+        ### Usage Tips
+        - Click on countries in the choropleth map to view detailed data
+        - Use the time slider to see data changes over years
+        - Hover over chart elements for detailed tooltips
+        - Switch between different chart types using the provided controls
+        
+        ## 📈 Project Goals
+        
+        Our application aims to:
+        1. **Educate**: Increase public awareness of air quality impacts on health
+        2. **Visualize**: Make complex environmental data accessible and understandable
+        3. **Inform**: Support policy makers and researchers with data insights
+        4. **Demonstrate**: Showcase modern web development and data visualization techniques
+        
+        ---
+        
+        *Last updated: $(date '+%Y-%m-%d')*  
+        *Deployed via GitHub Actions from [cos30049 repository](https://github.com/Phonginhere/cos30049)*
+        EOF
+        
+        echo "✅ Deployment files prepared successfully!"
+    
+    - name: 🔧 Setup Git Configuration
+      run: |
+        git config --global user.name "github-actions[bot]"
+        git config --global user.email "github-actions[bot]@users.noreply.github.com"
+    
+    - name: 📡 Clone Hugging Face Space
+      env:
+        HF_TOKEN: ${{ secrets.HF_TOKEN }}
+      run: |
+        echo "Cloning Hugging Face Space repository..."
+        git clone https://huggingface.co/spaces/${{ env.HF_SPACE }} hf-repo
+        cd hf-repo
+        git remote set-url origin https://user:${{ secrets.HF_TOKEN }}@huggingface.co/spaces/${{ env.HF_SPACE }}
+    
+    - name: 🔄 Update Space Content
+      run: |
+        echo "Updating Hugging Face Space content..."
+        cd hf-repo
+        
+        # Preserve .gitattributes and .gitignore if they exist
+        if [ -f .gitattributes ]; then
+          cp .gitattributes ../gitattributes.backup
+        fi
+        if [ -f .gitignore ]; then
+          cp .gitignore ../gitignore.backup
+        fi
+        
+        # Remove old files (preserve .git directory)
+        find . -type f ! -path './.git/*' -delete
+        find . -type d -empty ! -path './.git*' -delete 2>/dev/null || true
+        
+        # Copy new deployment files
+        cp -r ../deploy/* .
+        
+        # Restore preserved files
+        if [ -f ../gitattributes.backup ]; then
+          cp ../gitattributes.backup .gitattributes
+        fi
+        if [ -f ../gitignore.backup ]; then
+          cp ../gitignore.backup .gitignore
+        fi
+        
+        # Stage all changes
+        git add .
+        
+        # Check for changes and commit if any
+        if git diff --staged --quiet; then
+          echo "ℹ️ No changes detected, skipping deployment"
+          echo "deployment_status=skipped" >> $GITHUB_ENV
+        else
+          # Create detailed commit message
+          echo "📝 Creating commit..."
+          git commit -m "🚀 Deploy Air Quality Dashboard
+
+        📅 Deployment: $(date '+%Y-%m-%d %H:%M:%S UTC')
+        🔗 Source: ${{ github.repository }}@${{ github.sha }}
+        👤 Actor: ${{ github.actor }}
+        🎯 Environment: ${{ github.event.inputs.environment || 'production' }}
+        
+        🔄 Auto-deployed via GitHub Actions"
+          
+          echo "⬆️ Pushing to Hugging Face Spaces..."
+          git push
+          echo "deployment_status=success" >> $GITHUB_ENV
+        fi
+    
+    - name: 🎉 Deployment Summary
+      run: |
+        echo "🏁 Deployment completed!"
+        echo ""
+        echo "📊 Summary:"
+        echo "├── Repository: ${{ github.repository }}"
+        echo "├── Commit SHA: ${{ github.sha }}"
+        echo "├── Environment: ${{ github.event.inputs.environment || 'production' }}"
+        echo "├── Node.js: ${{ env.NODE_VERSION }}"
+        echo "└── Status: ${{ env.deployment_status || 'completed' }}"
+        echo ""
+        echo "🔗 Your application is available at:"
+        echo "   https://huggingface.co/spaces/${{ env.HF_SPACE }}"
+        echo ""
+        echo "⏰ Deployed at: $(date '+%Y-%m-%d %H:%M:%S UTC')"
+        
+        if [ "${{ env.deployment_status }}" = "skipped" ]; then
+          echo ""
+          echo "ℹ️ Note: No changes were detected in the built files."
+          echo "   The application is already up to date."
+        fi
+    
+    - name: 💬 Update Pull Request (if applicable)
+      if: github.event_name == 'pull_request' && env.deployment_status == 'success'
+      uses: actions/github-script@v7
+      with:
+        script: |
+          const spaceUrl = `https://huggingface.co/spaces/${{ env.HF_SPACE }}`;
+          const deployTime = new Date().toISOString();
+          
+          const comment = `🚀 **Preview Deployment Ready!**
+          
+          Your changes have been successfully deployed to Hugging Face Spaces:
+          
+          🔗 **[View Live Preview](${spaceUrl})**
+          
+          📊 **Deployment Information:**
+          - 🎯 Environment: ${{ github.event.inputs.environment || 'production' }}
+          - 📝 Commit: \`${{ github.sha }}\`
+          - ⏰ Deploy Time: ${deployTime}
+          - 🔨 Node.js: ${{ env.NODE_VERSION }}
+          
+          The preview will automatically update when you push new changes to the frontend.
+          
+          ---
+          *Deployed by GitHub Actions*`;
+          
+          await github.rest.issues.createComment({
+            issue_number: context.issue.number,
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            body: comment
+          });
+    
+    - name: ❌ Handle Deployment Failure
+      if: failure()
+      run: |
+        echo "💥 Deployment failed!"
+        echo ""
+        echo "🔍 Troubleshooting steps:"
+        echo "1. Check if HF_TOKEN secret is properly set with write permissions"
+        echo "2. Verify the Hugging Face Space exists: ${{ env.HF_SPACE }}"
+        echo "3. Review the GitHub Actions logs above for specific error messages"
+        echo "4. Ensure your frontend builds successfully locally"
+        echo ""
+        echo "📚 For more help, check the deployment guide:"
+        echo "   https://github.com/${{ github.repository }}/blob/main/.github/DEPLOYMENT.md"

@@ -1,0 +1,365 @@
+name: Deploy Full Stack App to Hugging Face
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+  workflow_dispatch:
+    inputs:
+      deploy_target:
+        description: 'What to deploy'
+        required: true
+        default: 'frontend-only'
+        type: choice
+        options:
+        - frontend-only
+        - full-stack
+      force_deploy:
+        description: 'Force deployment even if no changes'
+        required: false
+        default: false
+        type: boolean
+
+env:
+  HF_SPACE_REPO: cos30049-safetywindy/air_quality_health
+
+jobs:
+  detect-changes:
+    runs-on: ubuntu-latest
+    outputs:
+      frontend-changed: ${{ steps.changes.outputs.frontend }}
+      backend-changed: ${{ steps.changes.outputs.backend }}
+    steps:
+    - uses: actions/checkout@v4
+    - uses: dorny/paths-filter@v2
+      id: changes
+      with:
+        filters: |
+          frontend:
+            - 'frontend/**'
+          backend:
+            - 'backend/**'
+
+  deploy-frontend:
+    needs: detect-changes
+    if: needs.detect-changes.outputs.frontend-changed == 'true' || github.event.inputs.force_deploy == 'true' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: 🚀 Starting deployment
+      run: |
+        echo "🎯 Target: Hugging Face Spaces"
+        echo "📦 Mode: ${{ github.event.inputs.deploy_target || 'frontend-only' }}"
+        echo "🔄 Trigger: ${{ github.event_name }}"
+    
+    - name: 📥 Checkout repository
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+        lfs: true
+    
+    - name: 🏗️ Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+        cache-dependency-path: frontend/package-lock.json
+    
+    - name: 📋 Install dependencies
+      working-directory: ./frontend
+      run: |
+        echo "📦 Installing frontend dependencies..."
+        npm ci --prefer-offline --no-audit
+    
+    - name: 🔧 Build frontend
+      working-directory: ./frontend
+      run: |
+        echo "🏗️ Building React application..."
+        CI=false npm run build
+    
+    - name: 🐍 Setup Python (for full-stack)
+      if: github.event.inputs.deploy_target == 'full-stack'
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+        cache: 'pip'
+    
+    - name: 📦 Install Python dependencies (for full-stack)
+      if: github.event.inputs.deploy_target == 'full-stack'
+      working-directory: ./backend
+      run: |
+        echo "🐍 Installing backend dependencies..."
+        pip install -r requirements.txt
+    
+    - name: 📂 Prepare Hugging Face Space
+      run: |
+        echo "📁 Creating Hugging Face Space structure..."
+        mkdir -p hf-space
+        
+        if [ "${{ github.event.inputs.deploy_target }}" = "full-stack" ]; then
+          echo "🔄 Preparing full-stack deployment..."
+          
+          # Copy backend files
+          cp -r backend/* hf-space/
+          
+          # Copy frontend build to static folder
+          mkdir -p hf-space/static
+          cp -r frontend/build/* hf-space/static/
+          
+          # Create app.py for Gradio/Streamlit interface
+          cat > hf-space/app.py << 'EOF'
+        import gradio as gr
+        import uvicorn
+        from fastapi import FastAPI
+        from fastapi.staticfiles import StaticFiles
+        from fastapi.responses import FileResponse
+        import os
+        import sys
+        
+        # Import your existing FastAPI app
+        sys.path.append(os.path.dirname(__file__))
+        from main import app as fastapi_app
+        
+        # Mount static files
+        fastapi_app.mount("/static", StaticFiles(directory="static"), name="static")
+        
+        @fastapi_app.get("/")
+        async def read_index():
+            return FileResponse('static/index.html')
+        
+        # Create Gradio interface for HF Spaces
+        with gr.Blocks(title="Air Quality Health Dashboard") as demo:
+            gr.HTML("""
+            <div style="text-align: center; padding: 20px;">
+                <h1>🌍 Air Quality Health Dashboard</h1>
+                <p>Interactive dashboard for air quality and health data visualization</p>
+                <iframe src="/static/index.html" width="100%" height="800px" frameborder="0"></iframe>
+            </div>
+            """)
+        
+        if __name__ == "__main__":
+            # For HF Spaces, use Gradio
+            demo.launch(server_name="0.0.0.0", server_port=7860)
+        EOF
+          
+          # Create requirements for HF Space
+          cat > hf-space/requirements.txt << 'EOF'
+        gradio==4.44.0
+        fastapi==0.104.1
+        uvicorn==0.24.0
+        pandas==2.1.3
+        scikit-learn==1.3.2
+        numpy==1.25.2
+        pydantic==2.5.0
+        python-multipart==0.0.6
+        EOF
+          
+          # Create README for full-stack
+          cat > hf-space/README.md << 'EOF'
+        ---
+        title: Air Quality Health Dashboard
+        emoji: 🌍
+        colorFrom: blue
+        colorTo: green
+        sdk: gradio
+        sdk_version: 4.44.0
+        app_file: app.py
+        pinned: false
+        license: mit
+        short_description: Full-stack Air Quality and Health Dashboard with ML predictions
+        ---
+        
+        # 🌍 Air Quality Health Dashboard
+        
+        A comprehensive full-stack application for visualizing air quality data and predicting health impacts using machine learning.
+        
+        ## ✨ Features
+        
+        - 📊 Interactive data visualizations (D3.js charts)
+        - 🗺️ Global choropleth maps
+        - 🔮 ML-powered health impact predictions
+        - 📱 Responsive design
+        - 🚀 FastAPI backend with real-time predictions
+        
+        ## 🛠️ Tech Stack
+        
+        - **Frontend**: React.js, D3.js, Material-UI
+        - **Backend**: FastAPI, Scikit-learn
+        - **Deployment**: Gradio + FastAPI on Hugging Face Spaces
+        
+        ## 👥 Team: Safety Windy
+        
+        - Phong Tran (104334842) - AI Major
+        - Khanh Toan Nguyen (104180605) - AI Major  
+        - Mai An Nguyen (103824070) - Data Science Major
+        
+        **COS30049 Computing Technology Innovation Project**  
+        Swinburne University of Technology
+        EOF
+        
+        else
+          echo "🎨 Preparing frontend-only deployment..."
+          
+          # Copy the built React app
+          cp -r frontend/build/* hf-space/
+          
+          # Create README for static deployment
+          cat > hf-space/README.md << 'EOF'
+        ---
+        title: Air Quality Health Dashboard
+        emoji: 🌍
+        colorFrom: blue
+        colorTo: green
+        sdk: static
+        pinned: false
+        license: mit
+        short_description: Air Quality and Health Visualization Dashboard
+        app_file: index.html
+        ---
+        
+        # 🌍 Air Quality Health Dashboard
+        
+        An interactive dashboard for visualizing air quality data and its impact on health across different countries and time periods.
+        
+        ## ✨ Features
+        
+        - 📊 Interactive charts and visualizations using D3.js
+        - 🗺️ Global choropleth maps showing air quality by country
+        - 📈 Bubble charts and bar charts for data exploration
+        - 🎛️ Time-based sliders for temporal analysis
+        - 📱 Fully responsive design
+        
+        ## 🛠️ Technology Stack
+        
+        - **Frontend**: React.js with hooks
+        - **Visualization**: D3.js for interactive charts
+        - **UI Framework**: Material-UI (MUI) components
+        - **Styling**: CSS3 with Bootstrap utilities
+        
+        ## 📊 Data Sources
+        
+        Data sourced from:
+        - State of Global Air (Health Effects Institute)
+        - Institute for Health Metrics and Evaluation (IHME)
+        - University of British Columbia research
+        
+        ## 👥 Team: Safety Windy
+        
+        - **Phong Tran** (104334842) - AI Major
+        - **Khanh Toan Nguyen** (104180605) - AI Major  
+        - **Mai An Nguyen** (103824070) - Data Science Major
+        
+        **COS30049 Computing Technology Innovation Project**  
+        Swinburne University of Technology, Bachelor of Computer Science
+        
+        ## 🚀 Usage
+        
+        This is a static React application. Simply visit the space URL to interact with the dashboard.
+        EOF
+        
+        fi
+        
+        echo "✅ Space preparation completed!"
+    
+    - name: 🔧 Setup Git configuration
+      run: |
+        git config --global user.email "github-actions[bot]@users.noreply.github.com"
+        git config --global user.name "github-actions[bot]"
+    
+    - name: 📡 Clone Hugging Face Space
+      env:
+        HF_TOKEN: ${{ secrets.HF_TOKEN }}
+      run: |
+        echo "📡 Cloning Hugging Face Space repository..."
+        git clone https://huggingface.co/spaces/${{ env.HF_SPACE_REPO }} hf-repo
+        cd hf-repo
+        git remote set-url origin https://user:${{ secrets.HF_TOKEN }}@huggingface.co/spaces/${{ env.HF_SPACE_REPO }}
+    
+    - name: 🔄 Update Hugging Face Space
+      run: |
+        echo "🔄 Updating Hugging Face Space contents..."
+        cd hf-repo
+        
+        # Backup important files
+        if [ -f .gitattributes ]; then
+          cp .gitattributes ../.gitattributes.backup
+        fi
+        
+        # Remove old files (except .git and .gitattributes)
+        find . -type f ! -path './.git/*' ! -name '.gitattributes' ! -name '.gitignore' -delete
+        find . -type d -empty -delete 2>/dev/null || true
+        
+        # Copy new files
+        cp -r ../hf-space/* .
+        
+        # Restore .gitattributes if it existed
+        if [ -f ../.gitattributes.backup ]; then
+          cp ../.gitattributes.backup .gitattributes
+        fi
+        
+        # Add all changes
+        git add .
+        
+        # Create commit message with details
+        COMMIT_MSG="🚀 Auto-deploy from GitHub
+        
+        📅 Deploy time: $(date '+%Y-%m-%d %H:%M:%S UTC')
+        🔗 Source: ${{ github.repository }}@${{ github.sha }}
+        🎯 Mode: ${{ github.event.inputs.deploy_target || 'frontend-only' }}
+        👤 Triggered by: ${{ github.actor }}
+        
+        Changes:
+        $(git diff --cached --name-only | head -10 | sed 's/^/- /')
+        $([ $(git diff --cached --name-only | wc -l) -gt 10 ] && echo "... and $(expr $(git diff --cached --name-only | wc -l) - 10) more files")"
+        
+        # Check if there are changes to commit
+        if git diff --staged --quiet; then
+          echo "ℹ️ No changes detected - skipping deployment"
+        else
+          echo "📝 Committing changes..."
+          git commit -m "$COMMIT_MSG"
+          echo "⬆️ Pushing to Hugging Face..."
+          git push
+          echo "✅ Deployment successful!"
+        fi
+    
+    - name: 📊 Deployment Summary
+      run: |
+        echo "🎉 Deployment process completed!"
+        echo ""
+        echo "📋 Summary:"
+        echo "- Repository: ${{ github.repository }}"
+        echo "- Commit: ${{ github.sha }}"
+        echo "- Mode: ${{ github.event.inputs.deploy_target || 'frontend-only' }}"
+        echo "- Target: https://huggingface.co/spaces/${{ env.HF_SPACE_REPO }}"
+        echo ""
+        echo "🔗 Your app should be available at:"
+        echo "   https://huggingface.co/spaces/${{ env.HF_SPACE_REPO }}"
+        echo ""
+        echo "⏰ Deployment completed at: $(date)"
+    
+    - name: 💬 Comment on PR (if applicable)
+      if: github.event_name == 'pull_request'
+      uses: actions/github-script@v7
+      with:
+        script: |
+          const deployUrl = `https://huggingface.co/spaces/${{ env.HF_SPACE_REPO }}`;
+          const comment = `🚀 **Deployment Preview Available!**
+          
+          Your changes have been deployed to Hugging Face Spaces:
+          🔗 **[View Deployment](${deployUrl})**
+          
+          📊 **Deployment Details:**
+          - Mode: ${{ github.event.inputs.deploy_target || 'frontend-only' }}
+          - Commit: ${{ github.sha }}
+          - Deploy time: ${new Date().toISOString()}
+          
+          This preview will be updated automatically when you push new changes.`;
+          
+          github.rest.issues.createComment({
+            issue_number: context.issue.number,
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            body: comment
+          });
