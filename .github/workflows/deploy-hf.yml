@@ -1,0 +1,87 @@
+name: Deploy to HF Spaces
+
+on:
+  push:
+    branches: [main]
+    paths: ['frontend/**']
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+        cache-dependency-path: frontend/package-lock.json
+    
+    - name: Install and Build
+      working-directory: ./frontend
+      run: |
+        npm ci
+        npm run build
+    
+    - name: Deploy to Hugging Face Spaces
+      env:
+        HF_TOKEN: ${{ secrets.HF_TOKEN }}
+      run: |
+        # Clone the HF Space
+        git clone https://huggingface.co/spaces/cos30049-safetywindy/air_quality_health hf-space
+        cd hf-space
+        
+        # Configure git
+        git config user.email "action@github.com"
+        git config user.name "GitHub Action"
+        git remote set-url origin https://user:$HF_TOKEN@huggingface.co/spaces/cos30049-safetywindy/air_quality_health
+        
+        # Clear old files but preserve .git
+        find . -name "*.html" -o -name "*.js" -o -name "*.css" -o -name "*.json" -o -name "*.ico" -o -name "*.png" -o -name "*.svg" -o -name "*.txt" | grep -v "^\./.git" | xargs rm -f 2>/dev/null || true
+        rm -rf static/ build/ assets/ 2>/dev/null || true
+        
+        # Copy new build files
+        cp -r ../frontend/build/* .
+        
+        # Create HF Spaces README
+        cat > README.md << 'EOF'
+---
+title: Air Quality Health Dashboard
+emoji: 🌍
+colorFrom: blue
+colorTo: green
+sdk: static
+pinned: false
+license: mit
+short_description: Interactive Air Quality and Health Visualization Dashboard
+---
+
+# 🌍 Air Quality Health Dashboard
+
+An interactive dashboard for visualizing air quality data and health impacts.
+
+## Features
+- Interactive D3.js visualizations
+- Global choropleth maps
+- Time-series analysis
+- Responsive design
+
+## Team: Safety Windy
+- Phong Tran (104334842)
+- Khanh Toan Nguyen (104180605) 
+- Mai An Nguyen (103824070)
+
+COS30049 - Swinburne University of Technology
+EOF
+        
+        # Commit and push
+        git add .
+        if ! git diff --staged --quiet; then
+          git commit -m "🚀 Deploy from GitHub Actions $(date)"
+          git push
+          echo "✅ Deployment successful!"
+        else
+          echo "ℹ️ No changes to deploy"
+        fi

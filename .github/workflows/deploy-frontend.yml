@@ -43,7 +43,7 @@ jobs:
       working-directory: ./frontend
       run: |
         echo "Installing dependencies..."
-        npm ci --only=production
+        npm ci
     
     - name: 🔨 Build Application
       working-directory: ./frontend
