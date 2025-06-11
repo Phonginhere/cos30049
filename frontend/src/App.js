@@ -13,6 +13,7 @@ function App() {
       <Navbar />
       <div className="App">
         <h1>Air Quality Health Dashboard</h1>
+        {/* Auto-deployment test - updated for Hugging Face Spaces */}
       </div>
 
       <div>
