@@ -58,7 +58,12 @@ const PredictionForm = ({ setPredictionData }) => {
     };
 
     try {
-      const response = await axios.post('http://localhost:8000/predict', payload);
+      // Use deployed backend API URL
+      const API_BASE_URL = process.env.NODE_ENV === 'production' 
+        ? 'https://cos30049-safetywindy-air-quality-health-api.hf.space'
+        : 'http://localhost:8000';
+        
+      const response = await axios.post(`${API_BASE_URL}/predict`, payload);
       setPrediction(response.data.predicted_burden_mean);
       setPredictionData({
         iso3: formData.iso3,
