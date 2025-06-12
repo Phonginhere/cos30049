@@ -93,7 +93,7 @@ jobs:
         sdk: static
         pinned: false
         license: mit
-        short_description: Air Quality and Health Visualization Dashboard - COS30049 Project
+        short_description: Interactive Air Quality & Health Data Visualization
         ---
         
         # 🌍 Air Quality Health Dashboard
