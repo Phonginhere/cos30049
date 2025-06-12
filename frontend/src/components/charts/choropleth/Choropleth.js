@@ -21,14 +21,20 @@ const Choropleth = () => {
     const json = world;   
 
     // Configuration for the plot dimensions and styling
-    var cfg = {
-        w: window.innerWidth*0.43,
-        h: (window.innerWidth*0.43)*0.7,
-        h2: (window.innerHeight*0.72),
-        win_h: window.screen.height,
-        padding: window.innerWidth/13,
-        fontSize: window.innerWidth*0.43/700
+    const getConfig = () => {
+        const containerWidth = containerRef.current ? containerRef.current.offsetWidth : window.innerWidth * 0.43;
+        const maxWidth = Math.min(containerWidth - 40, 600); // 40px for padding
+        return {
+            w: maxWidth,
+            h: maxWidth * 0.6, // Better aspect ratio for world map
+            h2: (window.innerHeight * 0.72),
+            win_h: window.screen.height,
+            padding: Math.min(maxWidth / 20, 30),
+            fontSize: Math.max(maxWidth / 700, 0.8)
+        };
     };
+
+    var cfg = getConfig();
 
     // const [formState, setFormState] = useState({
     //     visible: false,
@@ -39,6 +45,9 @@ const Choropleth = () => {
 
     
     useEffect(() => {
+        // Clear any existing content
+        d3.select(containerRef.current).selectAll("*").remove();
+
         // Create or update the chart using D3.js
         function drawChoropleth(initial_data){
             // Color scale for PM2.5 exposure levels
@@ -51,9 +60,10 @@ const Choropleth = () => {
 
             // Map projection and path generator
             const projection = d3.geoMercator()
-                    .center([0,55])
-                    .translate([cfg.w/2,cfg.h/2])
-                    .scale(cfg.w/7);
+                    .center([0, 20])
+                    .translate([(cfg.w - 2 * cfg.padding)/2, (cfg.h - 2 * cfg.padding)/2])
+                    .scale(Math.min((cfg.w - 2 * cfg.padding)/7, (cfg.h - 2 * cfg.padding)/5))
+                    .precision(0.1);
             const path = d3.geoPath()
                     .projection(projection);
                 
@@ -61,17 +71,18 @@ const Choropleth = () => {
             var container = d3.select(containerRef.current)
                     .append("svg")
                     .attr('id', 'choropleth-container')
-            
                     .attr("width", cfg.w)
-                    .attr("height", cfg.h);
+                    .attr("height", cfg.h)
+                    .attr("viewBox", `0 0 ${cfg.w} ${cfg.h}`)
+                    .attr("preserveAspectRatio", "xMidYMid meet")
+                    .style("max-width", "100%")
+                    .style("height", "auto");
 
-            // Create the SVG container
+            // Create the main SVG group (remove nested SVG)
             var svg = container
-                    .append("svg")
+                    .append("g")
                     .attr("id", "choropleth-svg")
-                    .attr("transform", `translate(${cfg.padding}, ${cfg.padding})`)
-                    .attr("width", cfg.w)
-                    .attr("height", cfg.h);
+                    .attr("transform", `translate(${cfg.padding}, ${cfg.padding})`);
 
             // Create legend group
             var legend = container.append("g")
