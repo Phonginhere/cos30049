@@ -1,5 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { TextField, Button, Box, Typography, MenuItem, Select, FormControl, InputLabel } from '@mui/material';
+import     try {
+      // Use deployed backend API URL - Updated to V3
+      const API_BASE_URL = process.env.NODE_ENV === 'production' 
+        ? 'https://cos30049-safetywindy-air_quality_health_api_v4.hf.space'
+        : 'http://localhost:8000';tField, Button, Box, Typography, MenuItem, Select, FormControl, InputLabel } from '@mui/material';
 import axios from 'axios';
 
 const PredictionForm = ({ setPredictionData }) => {
@@ -60,7 +64,7 @@ const PredictionForm = ({ setPredictionData }) => {
     try {
       // Use deployed backend API URL
       const API_BASE_URL = process.env.NODE_ENV === 'production' 
-        ? 'https://cos30049-safetywindy-air-quality-health-api.hf.space'
+        ? 'https://cos30049-safetywindy-air-quality-health-api.static.hf.space'
         : 'http://localhost:8000';
         
       const response = await axios.post(`${API_BASE_URL}/predict`, payload);
