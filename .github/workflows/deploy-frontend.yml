@@ -93,7 +93,7 @@ jobs:
         sdk: static
         pinned: false
         license: mit
-        short_description: Interactive Air Quality & Health Data Visualization
+        short_description: Interact Air Quality & Health Data Visualize
         ---
         
         # 🌍 Air Quality Health Dashboard
