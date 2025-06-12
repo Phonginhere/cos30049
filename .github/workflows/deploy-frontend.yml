@@ -55,6 +55,7 @@ jobs:
       run: |
         echo "Building React application for deployment..."
         echo "Forcing CI=false to ignore ESLint warnings..."
+        echo "📊 Data will be loaded from Hugging Face dataset - no local CSV files needed"
         
         # Unset CI variable that GitHub Actions sets automatically
         unset CI
@@ -191,30 +192,44 @@ jobs:
         echo "Updating Hugging Face Space content..."
         cd hf-repo
         
-        # Preserve .gitattributes and .gitignore if they exist
-        if [ -f .gitattributes ]; then
-          cp .gitattributes ../gitattributes.backup
-        fi
+        # Setup Git LFS for large files
+        echo "🔧 Setting up Git LFS for large files..."
+        git lfs install
+        
+        # Create .gitattributes for LFS tracking
+        cat > .gitattributes << 'EOF'
+        *.csv filter=lfs diff=lfs merge=lfs -text
+        *.json filter=lfs diff=lfs merge=lfs -text
+        static/media/* filter=lfs diff=lfs merge=lfs -text
+        EOF
+        
+        # Preserve .gitignore if it exists
         if [ -f .gitignore ]; then
           cp .gitignore ../gitignore.backup
         fi
         
-        # Remove old files (preserve .git directory)
-        find . -type f ! -path './.git/*' -delete
+        # Remove old files (preserve .git directory and .gitattributes)
+        find . -type f ! -path './.git/*' ! -name '.gitattributes' -delete
         find . -type d -empty ! -path './.git*' -delete 2>/dev/null || true
         
         # Copy new deployment files
         cp -r ../deploy/* .
         
-        # Restore preserved files
-        if [ -f ../gitattributes.backup ]; then
-          cp ../gitattributes.backup .gitattributes
+        # Remove large CSV files from static/media to avoid LFS issues
+        echo "🗂️ Processing large files..."
+        if [ -d "static/media" ]; then
+          # Find and remove CSV files larger than 5MB
+          find static/media -name "*.csv" -size +5M -delete
+          echo "✅ Removed large CSV files from build"
         fi
+        
+        # Restore preserved files
         if [ -f ../gitignore.backup ]; then
           cp ../gitignore.backup .gitignore
         fi
         
         # Stage all changes
+        git add .gitattributes
         git add .
         
         # Check for changes and commit if any
@@ -224,12 +239,13 @@ jobs:
         else
           # Create detailed commit message
           echo "📝 Creating commit..."
-          git commit -m "🚀 Deploy Air Quality Dashboard
+          git commit -m "🚀 Deploy Air Quality Dashboard (optimized)
 
         📅 Deployment: $(date '+%Y-%m-%d %H:%M:%S UTC')
         🔗 Source: ${{ github.repository }}@${{ github.sha }}
         👤 Actor: ${{ github.actor }}
         🎯 Environment: ${{ github.event.inputs.environment || 'production' }}
+        🔧 Optimization: Removed large CSV files to avoid size limits
         
         🔄 Auto-deployed via GitHub Actions"
           

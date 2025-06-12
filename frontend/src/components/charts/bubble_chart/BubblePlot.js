@@ -5,10 +5,7 @@ import * as d3 from 'd3';
 // import WindowDimensions from '../../hook/Dimensions';
 import '../chart_styles.css'
 
-// Import necessary data for the visualisation
-import all_countries_data_processed from '../../ProcessedData/all_countries_data_processed.csv';
-import Population from '../../ProcessedData/Population.csv';
-import country_continent from '../../ProcessedData/country_continent.csv';
+// Data will be loaded from public directory instead of being imported
 // import PredictionForm from '../../PredictionForm';
 
 const BubblePlot = ({ predictionData }) => {
@@ -128,11 +125,11 @@ const BubblePlot = ({ predictionData }) => {
 
         async function filterData(year, pollutant) {
             try {
-                // Await all CSV data loading
+                // Load CSV data from Hugging Face dataset
                 const [airQualityHealth, continentData, populationData] = await Promise.all([
-                    d3.csv(all_countries_data_processed),
-                    d3.csv(country_continent),
-                    d3.csv(Population)
+                    d3.csv('https://huggingface.co/datasets/cos30049-safetywindy/air_quality_health/resolve/main/all_countries_data_processed.csv'),
+                    d3.csv('https://huggingface.co/datasets/cos30049-safetywindy/air_quality_health/resolve/main/country_continent.csv'),
+                    d3.csv('https://huggingface.co/datasets/cos30049-safetywindy/air_quality_health/resolve/main/Population.csv')
                 ]);
 
                 // Filter air quality data based on the provided year and pollutant

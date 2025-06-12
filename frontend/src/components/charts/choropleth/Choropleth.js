@@ -5,8 +5,9 @@ import * as d3 from 'd3';
 import '../chart_styles.css'
 
 // Import necessary data for the visualisation
-import all_countries_data_processed from '../../ProcessedData/all_countries_data_processed.csv'
 import world from './world.json'
+
+// CSV data will be loaded from public directory
 
 
 
@@ -127,7 +128,7 @@ const Choropleth = () => {
             }
             function get_data_from_year(year) {
                 //Read the data form CSV file
-                return d3.csv(all_countries_data_processed).then(function(data) {
+                return d3.csv('https://huggingface.co/datasets/cos30049-safetywindy/air_quality_health/resolve/main/all_countries_data_processed.csv').then(function(data) {
    
                     var data_in_year = data.filter(function(d) {
                         return d.Year === year;
@@ -307,7 +308,7 @@ const Choropleth = () => {
         }
         
 
-        d3.csv(all_countries_data_processed).then(data => {
+        d3.csv('https://huggingface.co/datasets/cos30049-safetywindy/air_quality_health/resolve/main/all_countries_data_processed.csv').then(data => {
             drawChoropleth(data);
         }).catch(error => {
             console.error("Error loading data:", error);
