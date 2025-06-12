@@ -240,6 +240,7 @@ const Choropleth = () => {
                             .enter()
                             .append("path")
                             .attr("d", path)
+                            .attr("class", "country-path")
                             .style("fill", function(d){
                                 var value = d.properties.value;
                                 if (value) {
@@ -248,23 +249,23 @@ const Choropleth = () => {
                                     return "#999";
                                 }
                             })
+                            .style("stroke", "#white")
+                            .style("stroke-width", 0.5)
+                            .style("cursor", "pointer")
+                            .style("pointer-events", "all")
                             
                             .on("mouseover", handleMouseOver)
                             .on("mousemove", handlerMouseMove)
                             .on("mouseleave", handlerMouseOut)
 
                             .on('click', function(event, d) {
+                                event.stopPropagation(); // Prevent event bubbling
                                 let year = slider.value;
                                 let code = d.id;
-                                let country = d.properties.name    
-                                console.log(`Send Data: ${year}, ${code}, ${country}`);
+                                let country = d.properties.name;
+                                console.log(`Country clicked! Year: ${year}, Code: ${code}, Country: ${country}`);
                                 sendCountryData(year, code, country); 
-                                if (typeof module !== 'undefined' && typeof module.exports !== 'undefined') {
-                                    module.exports = year;
-                                    module.exports = slider;
-                                }
                             });
-                            ;
                             
                     });
                         //Title
@@ -314,8 +315,17 @@ const Choropleth = () => {
         }
 
         function sendCountryData(year, code, country) {
-
-            document.dispatchEvent(new CustomEvent('countryClick', { detail: { year, code, country } }));
+            console.log("Sending country data:", { year, code, country });
+            
+            // Create and dispatch the custom event
+            const countryClickEvent = new CustomEvent('countryClick', { 
+                detail: { year, code, country },
+                bubbles: true,
+                cancelable: true
+            });
+            
+            document.dispatchEvent(countryClickEvent);
+            console.log("Country click event dispatched successfully");
         }
         
 

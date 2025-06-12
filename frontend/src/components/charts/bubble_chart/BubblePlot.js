@@ -9,14 +9,11 @@ import '../chart_styles.css'
 // import PredictionForm from '../../PredictionForm';
 
 const BubblePlot = ({ predictionData }) => {
-    // Remove any existing SVG elements from previous renders
-    if (!predictionData)
-    {
-        d3.select("#plot").remove();
-    }
-    // d3.select("#plot").remove();
-    d3.select("#barchart").remove();
-
+    // Remove any existing SVG elements from previous renders to avoid conflicts
+    // Only remove bar chart elements if we're switching to bubble plot
+    d3.select("#barchart-container").remove();
+    d3.select("#barchart-option").remove();
+    
     // Reference to the container for the plot
     const containerRef = useRef();
     // const predictedData = predictionData
@@ -72,10 +69,10 @@ const BubblePlot = ({ predictionData }) => {
         const slider = document.getElementById('yearSlider');
         // const year = slider.value;  // Commented out unused variable
 
-        var pollutant;
+        var pollutant = 'pm25'; // Initialize with default value
         // var x_update; // Commented out unused variables
         // var y_update;
-        var chart_year;
+        var chart_year = "2020"; // Initialize with default year
 
         function handleAxisChange(update = false) {
             let x = x_option.value;
@@ -96,12 +93,18 @@ const BubblePlot = ({ predictionData }) => {
             update_option_axis(selectedOption, null)
         })
 
-
+        // Add Y-axis change handler
+        d3.select("#yAxis_option").on("change", function(d) {
+            var selectedOption = d3.select(this).property("value")
+            update_option_axis(null, selectedOption)
+        })
 
         // Get value from Year Slider
         slider.addEventListener('input', function() {
             let year = slider.value;
-            return filterData(year, pollutant).then(function(data){
+            let currentPollutant = x_option.value || 'pm25';
+            chart_year = year; // Update the chart_year variable
+            filterData(year, currentPollutant).then(function(data){
                 updatePlot(data, year);
             });
         });
@@ -118,8 +121,11 @@ const BubblePlot = ({ predictionData }) => {
             if (update_y === null){
                 update_y = y_option.value;
             }
+            // Use current year from slider
+            let year = document.getElementById('yearSlider').value;
+            let currentPollutant = x_option.value || 'pm25';
             d3.select("#plot-svg").remove();
-            drawChart(update_x, update_y, chart_year, update_x);
+            drawChart(update_x, update_y, year, currentPollutant);
         }
 
 
@@ -185,18 +191,30 @@ const BubblePlot = ({ predictionData }) => {
             }
         }
         
-        function updatePlot(data,chart_year) {
+        function updatePlot(data, chart_year) {
             var xAxis_option;
             var yAxis_option;
             var axis_option = handleAxisChange();
             xAxis_option = axis_option[0];
             yAxis_option = axis_option[1];
+
+            // Filter out null data for proper scaling
+            var mergedData = filter_null_data(data, [xAxis_option]);
+            var xAxisData = get_data_by_axis(mergedData, xAxis_option);
+
+            // Update population scale with proper domain
+            var maxPop = d3.max(mergedData, d => d.population) || 1000000000;
+            var minPop = d3.min(mergedData, d => d.population) || 1000000;
+            
+            population_scale
+                .domain([maxPop, minPop])
+                .range([cfg.radius*1.3, cfg.radius]);
     
             xScale
-                .domain([d3.min(data, d => {return d.exposureMean})-10, d3.max(data, d => {return d.exposureMean})+10])
+                .domain([d3.min(xAxisData)-10, d3.max(xAxisData)+10])
                 .range([0, cfg.w - cfg.padding*2]);
             yScale
-                .domain([d3.min(data, d => {return d.burdenMean})-10 , d3.max(data, d => {return d.burdenMean})+10])
+                .domain([d3.min(mergedData, d => {return d.burdenMean})-10 , d3.max(mergedData, d => {return d.burdenMean})+10])
                 .range([cfg.h - cfg.padding*2, 0]);     
     
             var xAxis = d3.axisBottom(xScale).ticks(7);
@@ -207,15 +225,23 @@ const BubblePlot = ({ predictionData }) => {
             
             var strokesContainer = d3.select('#strokes-container');
             var circles = strokesContainer.selectAll("circle")
-                .data(data);
+                .data(mergedData);
             
             circles.enter()
                 .append("circle")
+                .attr("class", function(d) { return "bubbles " + d.continent })
+                .on("mouseover", handleMouseOver)
+                .on("mousemove", handlerMouseMove)
+                .on("mouseleave", handleMouseOut)
                 .merge(circles)
                 .transition().duration(300)
                 .attr("cx", d => xScale(d.exposureMean))
                 .attr("cy", d => yScale(d.burdenMean))
-                .attr("r", function(d) { return population_scale(d.population)})
+                .attr("r", function(d) { 
+                    var pop = d.population || 10000000; // Default to 10 million if null
+                    return population_scale(pop);
+                })
+                .style("fill", function (d) { return continentColor(d.continent); })
                 .attr("stroke", "black");
     
             circles.exit().remove();
@@ -226,7 +252,7 @@ const BubblePlot = ({ predictionData }) => {
                     .attr("y", cfg.padding / 2)
                     .attr("id", "chart-year")
                     .style("text-anchor", "middle")
-                    .style("font-size", `${cfg.fontSize} px`) // Set the font size here
+                    .style("font-size", `${1.2*cfg.fontSize}rem`) // Set the font size here
                     .text(title_name(xAxis_option,yAxis_option,chart_year));
         }
     

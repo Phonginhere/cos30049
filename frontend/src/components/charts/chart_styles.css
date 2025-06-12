@@ -70,6 +70,19 @@
     display: block;
 }
 
+/* Choropleth map country styles */
+.country-path {
+    cursor: pointer;
+    pointer-events: all;
+    transition: opacity 0.2s ease, stroke-width 0.2s ease;
+}
+
+.country-path:hover {
+    stroke: #000 !important;
+    stroke-width: 2px !important;
+    opacity: 1 !important;
+}
+
 /* Responsive styles for choropleth map */
 #choropleth {
     border: 1px solid #ccc;

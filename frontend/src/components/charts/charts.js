@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import * as d3 from 'd3';
 import Choropleth from './choropleth/Choropleth';
 import BarChart from './bar_chart/BarCharts';
 import BubblePlot from './bubble_chart/BubblePlot';
@@ -18,10 +19,20 @@ const DrawAllCharts = () => {
     }, []);
 
     const handleBubblePlotClick = () => {
+        // Clean up bar chart elements before showing bubble plot
+        d3.select("#barchart").remove();
+        d3.select("#barchart-container").remove();
+        d3.select("#barchart-option").remove();
         setSelectedChart('bubble');
     };
-        <PredictionForm setPredictionData={setPredictionData}/>
+
     const handleBarChartClick = () => {
+        // Clean up bubble plot elements before showing bar chart
+        d3.select("#plot").remove();
+        d3.select("#plot-container").remove();
+        d3.select("#plot-svg").remove();
+        d3.select("#plot-option").remove();
+        d3.select("#predict").remove();
         setSelectedChart('bar');
     };
 
