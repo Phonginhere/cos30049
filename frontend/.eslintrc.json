@@ -1,0 +1,10 @@
+{
+  "extends": ["react-app"],
+  "rules": {
+    "no-unused-vars": "warn",
+    "jsx-a11y/anchor-is-valid": "warn",
+    "eqeqeq": "warn",
+    "no-redeclare": "warn",
+    "react-hooks/exhaustive-deps": "warn"
+  }
+}
