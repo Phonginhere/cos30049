@@ -437,7 +437,7 @@ const BarChart = () => {
                 `);
         });
         
-    }, []); // Only run once on component mount
+    }, [cfg.fontSize, cfg.h, cfg.padding, cfg.w, colorScale]); // Added missing dependencies
 
     return <div ref={svgRef}></div>;
 

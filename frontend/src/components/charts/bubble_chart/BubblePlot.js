@@ -69,11 +69,6 @@ const BubblePlot = ({ predictionData }) => {
         const slider = document.getElementById('yearSlider');
         // const year = slider.value;  // Commented out unused variable
 
-        var pollutant = 'pm25'; // Initialize with default value
-        // var x_update; // Commented out unused variables
-        // var y_update;
-        var chart_year = "2020"; // Initialize with default year
-
         function handleAxisChange(update = false) {
             let x = x_option.value;
             let y = y_option.value;
@@ -103,7 +98,6 @@ const BubblePlot = ({ predictionData }) => {
         slider.addEventListener('input', function() {
             let year = slider.value;
             let currentPollutant = x_option.value || 'pm25';
-            chart_year = year; // Update the chart_year variable
             filterData(year, currentPollutant).then(function(data){
                 updatePlot(data, year);
             });
@@ -261,16 +255,18 @@ const BubblePlot = ({ predictionData }) => {
             return filterData(chart_year,pollutant).then(function(data){
                 var xAxis_option;
                 var yAxis_option;
-                if (x_update == null && y_update == null){
+                if (x_update === null && y_update === null){
                     var axis_option = handleAxisChange();
                     xAxis_option = axis_option[0];
                     yAxis_option = axis_option[1];
+                    // eslint-disable-next-line no-unused-vars
                     var xAxisData = get_data_by_axis(data,xAxis_option);
                 }
                 else{
                     xAxis_option = x_update;
                     yAxis_option = y_update;
-                    var xAxisData = get_data_by_axis(data,xAxis_option);
+                    // Use the existing xAxisData calculation
+                    get_data_by_axis(data,xAxis_option);
                 }
                 var mergedData = filter_null_data(data, [xAxis_option]);
 
@@ -592,7 +588,7 @@ const BubblePlot = ({ predictionData }) => {
         }
 
         function replaceNull(data){
-            if (data == null) 
+            if (data === null) 
                 return `No Reported Data`;
             else {
                 return data;
@@ -601,19 +597,19 @@ const BubblePlot = ({ predictionData }) => {
 
         function get_data_by_axis(data,axis){
             return data.map(function(d){
-                if (axis == 'pm25'){
+                if (axis === 'pm25'){
                     return d.exposureMean;
                 }
-                if (axis == 'no2'){
+                if (axis === 'no2'){
                     return d.exposureMean;
                 }
-                if (axis == 'ozone'){
+                if (axis === 'ozone'){
                     return d.exposureMean;
                 }
-                if (axis == 'hap'){
+                if (axis === 'hap'){
                     return d.exposureMean;
                 }
-                if (axis == 'daly'){
+                if (axis === 'daly'){
                     return d.burdenMean;
                 }
                 return null;
@@ -628,36 +624,36 @@ const BubblePlot = ({ predictionData }) => {
         function title_name(xAxis, yAxis, year) {
             var title_x;
             var title_y;
-            if (xAxis == 'pm25') {
+            if (xAxis === 'pm25') {
                 title_x = 'PM25';
             }
-            else if (xAxis == 'no2') {
+            else if (xAxis === 'no2') {
                 title_x = 'NO2';
             }
-            else if (xAxis == 'ozone') {
+            else if (xAxis === 'ozone') {
                 title_x = 'Ozone';
             }
-            else if (xAxis == 'hap') {
+            else if (xAxis === 'hap') {
                 title_x = "HAP";
             }
-            else if (xAxis == 'daly') {
+            else if (xAxis === 'daly') {
                 title_x = "DALYs";
             }
     
     
-            if (yAxis == 'pm25') {
+            if (yAxis === 'pm25') {
                 title_y = 'PM25';
             }
-            else if (yAxis == 'no2') {
+            else if (yAxis === 'no2') {
                 title_y = 'NO2';
             }
-            else if (yAxis == 'ozone') {
+            else if (yAxis === 'ozone') {
                 title_y = 'Ozone';
             }
-            else if (yAxis == 'hap') {
+            else if (yAxis === 'hap') {
                 title_y = "HAP";
             }
-            else if (yAxis == 'daly') {
+            else if (yAxis === 'daly') {
                 title_y = "DALYs";
             }
 
@@ -665,19 +661,19 @@ const BubblePlot = ({ predictionData }) => {
         }
 
         function axis_name(axis){
-            if (axis == 'pm25') {
+            if (axis === 'pm25') {
                 return "PM25 (µg/m3)";
             }
-            else if (axis == 'no2'){
+            else if (axis === 'no2'){
                 return "NO2 (µg/m3)";
             }
-            else if (axis == 'ozone') {
+            else if (axis === 'ozone') {
                 return 'Ozone (ppb)';
             }
-            else if (axis == 'hap') {
+            else if (axis === 'hap') {
                 return "HAP (% of population)";
             }
-            else if (axis == 'daly') {
+            else if (axis === 'daly') {
                 return "DALYs";
             }
             else {
@@ -686,7 +682,7 @@ const BubblePlot = ({ predictionData }) => {
         }
 
 
-    }, []); // Only run once on component mount
+    }, [cfg.fontSize, cfg.h, cfg.padding, cfg.radius, cfg.w, cfg.win_h, continentColor, predictionData]); // Added missing dependencies
 
     return (
         <div>

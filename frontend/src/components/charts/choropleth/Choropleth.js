@@ -335,7 +335,7 @@ const Choropleth = () => {
             console.error("Error loading data:", error);
         });
 
-    }, []); // Only run once on component mount
+    }, [cfg.fontSize, cfg.h, cfg.padding, cfg.w, cfg.win_h, json]); // Added missing dependencies
 
     return (
     <>
