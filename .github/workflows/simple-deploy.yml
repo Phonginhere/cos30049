@@ -67,15 +67,27 @@ jobs:
         git config --global user.email "actions@github.com"
         git config --global user.name "GitHub Actions"
         
+        # Clone with force to handle conflicts
         git clone https://huggingface.co/spaces/cos30049-safetywindy/air_quality_health temp-hf-repo
         cd temp-hf-repo
         
-        # Remove old files but keep .git directory
-        find . -type f ! -path './.git/*' -delete
+        # Pull latest changes to avoid conflicts
+        git pull origin main || true
+        
+        # Remove old files but keep .git directory and important HF files
+        find . -type f ! -path './.git/*' ! -name 'README.md' -delete 2>/dev/null || true
         
         # Copy new files
         cp -r ../hf-deploy/* .
         
-        git add .
-        git commit -m "Deploy from GitHub Actions $(date)" || echo "No changes to commit"
-        git push https://user:$HF_TOKEN@huggingface.co/spaces/cos30049-safetywindy/air_quality_health
+        # Add all changes
+        git add -A
+        
+        # Check if there are changes to commit
+        if git diff --staged --quiet; then
+          echo "No changes to deploy"
+        else
+          git commit -m "Deploy from GitHub Actions $(date)"
+          # Force push to handle any remaining conflicts
+          git push --force-with-lease https://user:$HF_TOKEN@huggingface.co/spaces/cos30049-safetywindy/air_quality_health main
+        fi

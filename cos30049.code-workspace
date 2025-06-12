@@ -1,0 +1,11 @@
+{
+	"folders": [
+		{
+			"path": "."
+		},
+		{
+			"path": "../../HuggingFace/air_quality_health"
+		}
+	],
+	"settings": {}
+}
