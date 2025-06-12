@@ -110,9 +110,11 @@ jobs:
       env:
         HF_TOKEN: ${{ secrets.HF_TOKEN }}
       run: |
-        git clone https://huggingface.co/spaces/cos30049-safetywindy/air_quality_health hf-repo
+        git clone https://user:$HF_TOKEN@huggingface.co/spaces/cos30049-safetywindy/air_quality_health hf-repo
     
     - name: Update Hugging Face Space
+      env:
+        HF_TOKEN: ${{ secrets.HF_TOKEN }}
       run: |
         # Remove old files except .git and .gitattributes
         cd hf-repo
@@ -130,10 +132,8 @@ jobs:
           echo "No changes to deploy"
         else
           git commit -m "🚀 Auto-deploy from GitHub Actions - $(date '+%Y-%m-%d %H:%M:%S')"
-          git push
+          git push https://user:$HF_TOKEN@huggingface.co/spaces/cos30049-safetywindy/air_quality_health
         fi
-      env:
-        HF_TOKEN: ${{ secrets.HF_TOKEN }}
     
     - name: Deployment Summary
       run: |

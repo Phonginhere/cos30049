@@ -1,0 +1,158 @@
+name: Deploy to HF Spaces (Hub Method)
+
+on:
+  push:
+    branches: [ main, master ]
+    paths:
+      - 'frontend/**'
+  workflow_dispatch: # Allow manual trigger
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+        cache-dependency-path: frontend/package-lock.json
+    
+    - name: Install frontend dependencies
+      working-directory: ./frontend
+      run: npm ci
+    
+    - name: Build frontend
+      working-directory: ./frontend
+      run: npm run build
+    
+    - name: Setup Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.9'
+    
+    - name: Install Hugging Face Hub
+      run: |
+        pip install huggingface-hub
+    
+    - name: Prepare deployment files
+      run: |
+        # Create deployment directory
+        mkdir -p deploy
+        
+        # Copy built React app
+        cp -r frontend/build/* deploy/
+        
+        # Create README.md with proper metadata
+        cat > deploy/README.md << 'EOF'
+        ---
+        title: Air Quality Health
+        emoji: 🌍
+        colorFrom: blue
+        colorTo: green
+        sdk: static
+        pinned: false
+        license: mit
+        short_description: Air Quality and Health Visualization Dashboard
+        ---
+        
+        # Air Quality Health Dashboard
+        
+        Interactive dashboard for visualizing air quality data and its impact on health across different countries and time periods.
+        
+        ## Features
+        
+        - 🗺️ Interactive world map with clickable countries
+        - 📊 Dynamic bubble and bar charts
+        - 📈 Timeline scrolling (1990-2020)
+        - 🔮 Health burden predictions using ML models
+        - 📱 Responsive design for all devices
+        
+        ## Tech Stack
+        
+        - **Frontend**: React.js + D3.js
+        - **UI Framework**: Material-UI (MUI)
+        - **Data Visualization**: D3.js
+        - **Data Source**: Hugging Face Datasets
+        
+        ## How to Use
+        
+        1. **Explore the Map**: Click on any country to see detailed health impact data
+        2. **Timeline Navigation**: Use the year slider to explore data from 1990-2020
+        3. **Chart Switching**: Toggle between bubble chart and bar chart views
+        4. **Pollutant Selection**: Choose different pollutants (PM2.5, Ozone, HAP)
+        5. **Predictions**: Get AI-powered health burden predictions
+        
+        ## Team: Safety Windy
+        
+        - **Phong Tran** (104334842)
+        - **Khanh Toan Nguyen** (104180605) 
+        - **Mai An Nguyen** (103824070)
+        
+        **Course**: COS30049 Computing Technology Innovation Project  
+        **Institution**: Swinburne University of Technology
+        
+        ---
+        
+        *This dashboard provides insights into global air quality trends and their health impacts, supporting data-driven environmental and health policy decisions.*
+        EOF
+    
+    - name: Deploy to Hugging Face Spaces
+      env:
+        HF_TOKEN: ${{ secrets.HF_TOKEN }}
+      run: |
+        python << 'EOF'
+        import os
+        from huggingface_hub import HfApi, Repository
+        import shutil
+        
+        # Initialize HF API
+        api = HfApi()
+        token = os.environ.get('HF_TOKEN')
+        
+        if not token:
+            print("❌ HF_TOKEN not found")
+            exit(1)
+        
+        # Repository details
+        repo_id = "cos30049-safetywindy/air_quality_health"
+        repo_type = "space"
+        
+        try:
+            # Create or get repository info
+            try:
+                repo_info = api.repo_info(repo_id=repo_id, repo_type=repo_type, token=token)
+                print(f"✅ Repository exists: {repo_info.id}")
+            except:
+                print("🔄 Creating new repository...")
+                api.create_repo(repo_id=repo_id, repo_type=repo_type, token=token, private=False)
+                print("✅ Repository created successfully")
+            
+            # Upload files
+            print("🚀 Uploading files to Hugging Face Spaces...")
+            api.upload_folder(
+                folder_path="./deploy",
+                repo_id=repo_id,
+                repo_type=repo_type,
+                token=token,
+                commit_message=f"🚀 Auto-deploy from GitHub Actions - {os.popen('date').read().strip()}"
+            )
+            
+            print("✅ Deployment completed successfully!")
+            print(f"🌐 Your app is available at: https://huggingface.co/spaces/{repo_id}")
+            
+        except Exception as e:
+            print(f"❌ Deployment failed: {str(e)}")
+            exit(1)
+        EOF
+    
+    - name: Deployment Summary
+      run: |
+        echo "🎉 Deployment process completed!"
+        echo "📝 Your app should be available at: https://huggingface.co/spaces/cos30049-safetywindy/air_quality_health"
+        echo "⏰ Deployment time: $(date)"
+        echo "🔄 It may take a few minutes for the space to build and become available."
